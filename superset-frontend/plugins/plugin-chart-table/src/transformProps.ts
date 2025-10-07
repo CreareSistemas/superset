@@ -56,7 +56,6 @@ import {
 
 const { PERCENT_3_POINT } = NumberFormats;
 const { DATABASE_DATETIME } = TimeFormats;
-const REGEX_TRANSLATION_LABEL = /^(column\.|field\.|table\.)/;
 
 function isNumeric(key: string, data: DataRecord[] = []) {
   return data.every(
