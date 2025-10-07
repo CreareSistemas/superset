@@ -511,7 +511,7 @@ const Header = () => {
 
   const editableTitleProps = useMemo(
     () => ({
-      title: dashboardTitle,
+      title: t(dashboardTitle), 
       canEdit: userCanEdit && editMode,
       onSave: handleChangeText,
       placeholder: t('Add the name of the dashboard'),
