@@ -205,7 +205,7 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
           <Tooltip title={headerTooltip}>
             <EditableTitle
               title={
-                sliceName ||
+                t(sliceName) ||
                 (editMode
                   ? '---' // this makes an empty title clickable
                   : '')
