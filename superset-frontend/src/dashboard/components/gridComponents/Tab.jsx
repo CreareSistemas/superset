@@ -312,7 +312,7 @@ const Tab = props => {
           ref={dragSourceRef}
         >
           <EditableTitle
-            title=  {t(component.meta.text)} // TITULO DO LINK DO TAB
+            title=  {t(component.meta.text)}
             defaultTitle={component.meta.defaultText}
             placeholder={component.meta.placeholder}
             canEdit={editMode && isFocused}
