@@ -323,7 +323,7 @@ def cached_common_bootstrap_data(  # pylint: disable=unused-argument
         and bool(available_specs[GSheetsEngineSpec])
     )
 
-    language = locale.language if locale else "en"
+    language = str(locale) if locale else "en"
 
     bootstrap_data = {
         "conf": frontend_config,
