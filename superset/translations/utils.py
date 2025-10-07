@@ -44,7 +44,6 @@ def get_language_pack(locale: str) -> Optional[dict[str, Any]]:
     
     pack = ALL_LANGUAGE_PACKS.get(locale)
     
-    # Recarrega se não tem cache OU se cache customizado expirou
     if not pack or cache_expired:
         filename = DIR + f"/{locale}/LC_MESSAGES/messages.json"
         if not locale or locale == "en":
