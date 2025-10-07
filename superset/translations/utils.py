@@ -35,8 +35,16 @@ def get_language_pack(locale: str) -> Optional[dict[str, Any]]:
     >>> get_language_pack('fr')['Dashboards']
     "Tableaux de bords"
     """
+
+    try:
+        from superset.translations.utils_custom import is_custom_cache_expired
+        cache_expired = is_custom_cache_expired(locale)
+    except ImportError:
+        cache_expired = False
+    
     pack = ALL_LANGUAGE_PACKS.get(locale)
-    if not pack:
+    
+    if not pack or cache_expired:
         filename = DIR + f"/{locale}/LC_MESSAGES/messages.json"
         if not locale or locale == "en":
             # Forcing a dummy, quasy-empty language pack for English since the file
@@ -45,6 +53,13 @@ def get_language_pack(locale: str) -> Optional[dict[str, Any]]:
         try:
             with open(filename, encoding="utf8") as f:
                 pack = json.load(f)
+                
+                try:
+                    from superset.translations.utils_custom import merge_with_custom_translations
+                    pack = merge_with_custom_translations(locale, pack or {})
+                except ImportError:
+                    pass
+                
                 ALL_LANGUAGE_PACKS[locale] = pack or {}
         except Exception:  # pylint: disable=broad-except
             logger.error(
