@@ -16,7 +16,7 @@
 # under the License.
 
 """
-Dynamic translations loader from GitHub Pages with intelligent caching.
+Dynamic translations loader from custom url with intelligent caching.
 """
 
 import json
@@ -69,7 +69,7 @@ def _merge_translations(base: dict[str, Any], custom: dict[str, Any]) -> dict[st
 
 
 def get_language_pack_custom(locale: str) -> dict[str, Any]:
-    """Fetch custom translations from GitHub Pages."""
+    """Fetch custom translations from custom url."""
 
     if os.getenv('CUSTOM_TRANSLATIONS_ENABLED', 'false').lower() != 'true':
         return {}
@@ -81,9 +81,9 @@ def get_language_pack_custom(locale: str) -> dict[str, Any]:
         logger.debug(f"Using cached translations for {locale}")
         return _custom_packs.get(locale, {})
     
-    base_url = os.getenv('GITHUB_TRANSLATIONS_BASE_URL')
+    base_url = os.getenv('CUSTOM_TRANSLATIONS_BASE_URL')
     if not base_url:
-        logger.warning("GITHUB_TRANSLATIONS_BASE_URL not configured")
+        logger.warning("CUSTOM_TRANSLATIONS_BASE_URL not configured")
         return {}
     
     base_url = base_url.rstrip('/')
@@ -124,7 +124,7 @@ def get_language_pack_custom(locale: str) -> dict[str, Any]:
 
 
 def merge_with_custom_translations(locale: str, base_pack: dict[str, Any]) -> dict[str, Any]:
-    """Merge base translations with custom translations from GitHub Pages."""
+    """Merge base translations with custom translations from custom url."""
 
     custom_pack = get_language_pack_custom(locale)
     merged = _merge_translations(base_pack, custom_pack)
