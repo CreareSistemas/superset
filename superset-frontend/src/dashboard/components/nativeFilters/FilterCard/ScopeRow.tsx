@@ -72,7 +72,7 @@ export const ScopeRow = memo(({ filter }: FilterCardRowProps) => {
                 .flat()
                 .map((element, index) => (
                   <span key={element}>
-                    {index === 0 ? element : `, ${element}`}
+                    {index === 0 ? t(element) : `, ${t(element)}`}
                   </span>
                 ))
             : t('None')}
