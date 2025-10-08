@@ -30,7 +30,6 @@ const en = {
   'page_size.entries': ['entries'],
   'table.previous_page': ['Previous'],
   'table.next_page': ['Next'],
-  'search.num_records': ['%s record', '%s records...'],
 };
 
 const translations: Partial<Record<Locale, typeof en>> = {
@@ -46,7 +45,6 @@ const translations: Partial<Record<Locale, typeof en>> = {
     'page_size.entries': ['entrées'],
     'table.previous_page': ['Précédent'],
     'table.next_page': ['Suivante'],
-    'search.num_records': ['%s enregistrement', '%s enregistrements...'],
   },
   zh: {
     'Query Mode': ['查询模式'],
@@ -59,7 +57,6 @@ const translations: Partial<Record<Locale, typeof en>> = {
     'page_size.entries': ['条'],
     'table.previous_page': ['上一页'],
     'table.next_page': ['下一页'],
-    'search.num_records': ['%s条记录...'],
   },
 };
 
