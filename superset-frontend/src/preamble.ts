@@ -33,6 +33,9 @@ import setupFormatters from './setup/setupFormatters';
 import setupDashboardComponents from './setup/setupDashboardComponents';
 import { User } from './types/bootstrapTypes';
 import getBootstrapData from './utils/getBootstrapData';
+import 'dayjs/locale/pt-br';
+import 'dayjs/locale/pt';
+import 'dayjs/locale/es';
 
 if (process.env.WEBPACK_MODE === 'development') {
   setHotLoaderConfig({ logLevel: 'debug', trackTailUpdates: false });
@@ -41,10 +44,25 @@ if (process.env.WEBPACK_MODE === 'development') {
 // eslint-disable-next-line import/no-mutable-exports
 const bootstrapData = getBootstrapData();
 
+const SUPERSET_TO_DAYJS_LOCALE_MAP: Record<string, string> = {
+  pt_BR: 'pt-br',
+};
+
+function configureDayjsLocale(supersetLocale: string): void {
+  const dayjsLocale =
+    SUPERSET_TO_DAYJS_LOCALE_MAP[supersetLocale] ||
+    supersetLocale.toLowerCase();
+  try {
+    dayjs.locale(dayjsLocale);
+  } catch (error) {
+    dayjs.locale('en');
+  }
+}
+
 // Configure translation
 if (typeof window !== 'undefined') {
   configure({ languagePack: bootstrapData.common.language_pack });
-  dayjs.locale(bootstrapData.common.locale);
+  configureDayjsLocale(bootstrapData.common.locale);
 } else {
   configure();
 }
