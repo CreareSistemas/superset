@@ -22,10 +22,8 @@ from typing import Any, ClassVar, TYPE_CHECKING
 import pandas as pd
 
 from superset.common.chart_data import ChartDataResultFormat, ChartDataResultType
-from superset.common.query_context_processor import (
-    CachedTimeOffset,
-    QueryContextProcessor,
-)
+from superset.common.query_context_processor import CachedTimeOffset
+from superset.common.query_context_processor_custom import CustomQueryContextProcessor
 from superset.common.query_object import QueryObject
 from superset.models.slice import Slice
 from superset.utils.core import GenericDataType
@@ -58,7 +56,7 @@ class QueryContext:
 
     cache_values: dict[str, Any]
 
-    _processor: QueryContextProcessor
+    _processor: CustomQueryContextProcessor
 
     # TODO: Type datasource and query_object dictionary with TypedDict when it becomes
     #  a vanilla python type https://github.com/python/mypy/issues/5288
@@ -84,7 +82,7 @@ class QueryContext:
         self.force = force
         self.custom_cache_timeout = custom_cache_timeout
         self.cache_values = cache_values
-        self._processor = QueryContextProcessor(self)
+        self._processor = CustomQueryContextProcessor(self)
 
     def get_data(
         self,
