@@ -22,6 +22,7 @@ import { FC } from 'react';
 import { useChartOwnerNames } from 'src/hooks/apiResources';
 import ErrorMessageWithStackTrace from 'src/components/ErrorMessage/ErrorMessageWithStackTrace';
 import { ChartSource } from 'src/types/ChartSource';
+import TokenExpiredAlert from 'src/components/ErrorMessage/TokenExpiredAlert';
 
 export type Props = {
   chartId: string;
@@ -37,6 +38,17 @@ const DEFAULT_CHART_ERROR = 'Data error';
 export const ChartErrorMessage: FC<Props> = ({ chartId, error, ...props }) => {
   // fetches the chart owners and adds them to the extra data of the error message
   const { result: owners } = useChartOwnerNames(chartId);
+
+  const isEmbeddedContext = window.parent !== window;
+  const isTokenExpiredError =
+    error?.message &&
+    (error.message.toLowerCase().includes('unauthorized') ||
+      error.message.toLowerCase().includes('token') ||
+      error.message.toLowerCase().includes('expired'));
+
+  if (isEmbeddedContext && isTokenExpiredError) {
+    return <TokenExpiredAlert />;
+  }
 
   // don't mutate props
   const ownedError = error && {
