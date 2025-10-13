@@ -22,6 +22,7 @@ import Modal from 'src/components/Modal';
 import { ExclamationCircleOutlined, WarningOutlined } from '@ant-design/icons';
 import Alert from 'src/components/Alert';
 import { t, useTheme } from '@superset-ui/core';
+import TokenExpiredAlert from './TokenExpiredAlert';
 
 export interface ErrorAlertProps {
   errorType?: string; // Strong text on the first line
@@ -56,12 +57,29 @@ const ErrorAlert: React.FC<ErrorAlertProps> = ({
     !descriptionDetailsCollapsed,
   );
   const [showModal, setShowModal] = useState(false);
+  const theme = useTheme();
+
+  const isEmbeddedContext = window.parent !== window;
+  const isTokenExpiredError =
+    isEmbeddedContext &&
+    (errorType === 'Data error' ||
+      (typeof message === 'string' &&
+        (message.toLowerCase().includes('unauthorized') ||
+          message.toLowerCase().includes('token') ||
+          message.toLowerCase().includes('expired'))) ||
+      (typeof description === 'string' &&
+        (description.toLowerCase().includes('unauthorized') ||
+          description.toLowerCase().includes('token') ||
+          description.toLowerCase().includes('expired'))));
+
+  if (isTokenExpiredError) {
+    return <TokenExpiredAlert />;
+  }
 
   const toggleDescription = () => {
     setIsDescriptionVisible(!isDescriptionVisible);
   };
 
-  const theme = useTheme();
   const renderTrigger = () => {
     const icon =
       type === 'warning' ? <WarningOutlined /> : <ExclamationCircleOutlined />;
