@@ -38,7 +38,7 @@ class EmbeddedDashboard(Model, AuditMixinNullable):
 
     __tablename__ = "embedded_dashboards"
 
-    uuid = Column(UUIDType(binary=True), default=uuid.uuid4, primary_key=True)
+    uuid = Column(UUIDType(binary=True), primary_key=True)
     allow_domain_list = Column(Text)  # reference the `allowed_domains` property instead
     dashboard_id = Column(
         Integer,
