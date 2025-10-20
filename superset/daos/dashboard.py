@@ -450,6 +450,7 @@ class EmbeddedDashboardDAO(BaseDAO[EmbeddedDashboard]):
         embedded: EmbeddedDashboard = (
             dashboard.embedded[0] if dashboard.embedded else EmbeddedDashboard()
         )
+        embedded.uuid = dashboard.uuid
         embedded.allow_domain_list = ",".join(allowed_domains)
         dashboard.embedded = [embedded]
         return embedded
