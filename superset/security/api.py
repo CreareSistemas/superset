@@ -74,6 +74,7 @@ class GuestTokenCreateSchema(PermissiveSchema):
     user = fields.Nested(UserSchema)
     resources = fields.List(fields.Nested(ResourceSchema), required=True)
     rls = fields.List(fields.Nested(RlsRuleSchema), required=True)
+    locale = fields.String(required=False, allow_none=True)
 
 
 guest_token_create_schema = GuestTokenCreateSchema()
@@ -164,8 +165,11 @@ class SecurityRestApi(BaseSupersetApi):
             # TODO: Add generic validation:
             # make sure username doesn't reference an existing user
             # check rls rules for validity?
+            
+            locale = body.get("locale")
+            
             token = self.appbuilder.sm.create_guest_access_token(
-                body["user"], body["resources"], body["rls"]
+                body["user"], body["resources"], body["rls"], locale
             )
             return self.response(200, token=token)
         except EmbeddedDashboardNotFoundError as error:
