@@ -2569,6 +2569,7 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
         user: GuestTokenUser,
         resources: GuestTokenResources,
         rls: list[GuestTokenRlsRule],
+        locale: Optional[str] = None,
     ) -> bytes:
         secret = current_app.config["GUEST_TOKEN_JWT_SECRET"]
         algo = current_app.config["GUEST_TOKEN_JWT_ALGO"]
@@ -2587,6 +2588,8 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
             "aud": audience,
             "type": "guest",
         }
+        if locale is not None:
+            claims["locale"] = locale
         return self.pyjwt_for_guest_token.encode(claims, secret, algorithm=algo)
 
     def get_guest_user_from_request(self, req: Request) -> Optional[GuestUser]:
