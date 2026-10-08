@@ -24,6 +24,7 @@ import {
 } from 'react-reverse-portal';
 import { FilterBarOrientation } from 'src/dashboard/types';
 import { isChartCustomization } from '@superset-ui/core';
+import { t } from '@apache-superset/core/translation';
 import { checkIsMissingRequiredValue } from '../utils';
 import FilterValue from './FilterValue';
 import { FilterCard } from '../../FilterCard';
@@ -79,7 +80,7 @@ const FilterControl = ({
           id={`filter-name-${filter.id}`}
           data-test="filter-control-name"
         >
-          {name}
+          {t(name)}
         </FilterControlTitle>
         {isRequired && <RequiredFieldIndicator />}
         {filter.description?.trim() && (

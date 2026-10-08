@@ -594,7 +594,8 @@ const Header = (): JSX.Element => {
 
   const editableTitleProps = useMemo(
     () => ({
-      title: dashboardTitle,
+      // Creare: traduz o título fora do modo de edição
+      title: editMode || !dashboardTitle ? dashboardTitle : t(dashboardTitle),
       canEdit: userCanEdit && editMode,
       onSave: handleChangeText,
       placeholder: t('Add the name of the dashboard'),

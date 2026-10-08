@@ -57,7 +57,7 @@ export default function PluginFilterTimegrain(
       data.reduce(
         (agg, { duration, name }: { duration: string; name: string }) => ({
           ...agg,
-          [duration]: name,
+          [duration]: t(name),
         }),
         {} as { [key in string]: string },
       ),
@@ -111,7 +111,7 @@ export default function PluginFilterTimegrain(
     (row: { name: string; duration: string }) => {
       const { name, duration } = row;
       return {
-        label: name,
+        label: t(name),
         value: duration,
       };
     },

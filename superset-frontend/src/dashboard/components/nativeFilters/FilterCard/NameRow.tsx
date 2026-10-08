@@ -19,6 +19,7 @@
 import { useSelector } from 'react-redux';
 import { isChartCustomization, useTruncation } from '@superset-ui/core';
 import { css, SupersetTheme, useTheme } from '@apache-superset/core/theme';
+import { t } from '@apache-superset/core/translation';
 import { Icons } from '@superset-ui/core/components/Icons';
 import { useFilterConfigModal } from 'src/dashboard/components/nativeFilters/FilterBar/FilterConfigurationLink/useFilterConfigModal';
 import { RootState } from 'src/dashboard/types';
@@ -73,7 +74,7 @@ export const NameRow = ({
           />
         )}
         <TooltipWithTruncation title={elementsTruncated ? filter.name : null}>
-          <FilterName ref={filterNameRef}>{filter.name}</FilterName>
+          <FilterName ref={filterNameRef}>{t(filter.name)}</FilterName>
         </TooltipWithTruncation>
       </InternalRow>
       {canEdit && (

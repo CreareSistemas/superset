@@ -23,7 +23,7 @@ import { detectOS } from 'src/utils/common';
 export const getSliceHeaderTooltip = (sliceName: string | undefined) => {
   const isMac = detectOS() === 'MacOS';
   const firstLine = sliceName
-    ? t('Click to edit %s.', sliceName)
+    ? t('Click to edit %s.', t(sliceName))
     : t('Click to edit chart.');
   const secondLine = t(
     'Use %s to open in a new tab.',

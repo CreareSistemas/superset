@@ -264,7 +264,8 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
             <div>
               <EditableTitle
                 title={
-                  sliceName ||
+                  // Creare: traduz o título fora do modo de edição
+                  (sliceName && (editMode ? sliceName : t(sliceName))) ||
                   (editMode
                     ? '---' // this makes an empty title clickable
                     : '')

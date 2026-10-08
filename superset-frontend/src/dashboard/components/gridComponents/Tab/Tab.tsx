@@ -443,7 +443,12 @@ const Tab = (props: TabProps): ReactElement => {
           ref={dragSourceRef}
         >
           <EditableTitle
-            title={component.meta.text}
+            // Creare: traduz o título da aba fora do modo de edição
+            title={
+              editMode || !component.meta.text
+                ? component.meta.text
+                : t(component.meta.text)
+            }
             defaultTitle={component.meta.defaultText}
             placeholder={component.meta.placeholder}
             canEdit={editMode}

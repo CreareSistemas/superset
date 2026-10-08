@@ -27,6 +27,7 @@ import {
   Typography,
 } from '@superset-ui/core/components';
 import type { ErrorAlertProps } from './types';
+import TokenExpiredAlert from './TokenExpiredAlert';
 
 export const ErrorAlert: React.FC<ErrorAlertProps> = ({
   errorType = t('Error'),
@@ -53,6 +54,25 @@ export const ErrorAlert: React.FC<ErrorAlertProps> = ({
   };
 
   const theme = useTheme();
+
+  // Creare: no embedded, erros de token expirado viram o TokenExpiredAlert
+  const isEmbeddedContext = window.parent !== window;
+  const isTokenExpiredError =
+    isEmbeddedContext &&
+    (errorType === 'Data error' ||
+      (typeof message === 'string' &&
+        (message.toLowerCase().includes('unauthorized') ||
+          message.toLowerCase().includes('token') ||
+          message.toLowerCase().includes('expired'))) ||
+      (typeof description === 'string' &&
+        (description.toLowerCase().includes('unauthorized') ||
+          description.toLowerCase().includes('token') ||
+          description.toLowerCase().includes('expired'))));
+
+  if (isTokenExpiredError) {
+    return <TokenExpiredAlert />;
+  }
+
   const renderTrigger = () => {
     const icon =
       type === 'warning' ? (

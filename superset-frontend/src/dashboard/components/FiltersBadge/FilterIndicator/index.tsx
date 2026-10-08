@@ -19,6 +19,7 @@
 
 import { forwardRef } from 'react';
 import { css } from '@apache-superset/core/theme';
+import { t } from '@apache-superset/core/translation';
 import { Icons } from '@superset-ui/core/components/Icons';
 import { getFilterValueForDisplay } from 'src/dashboard/components/nativeFilters/utils';
 import {
@@ -35,7 +36,8 @@ export interface IndicatorProps {
 
 const FilterIndicator = forwardRef<HTMLButtonElement, IndicatorProps>(
   ({ indicator: { column, name, value, path = [] }, onClick }, ref) => {
-    const resultValue = getFilterValueForDisplay(value);
+    const displayValue = getFilterValueForDisplay(value);
+    const resultValue = displayValue ? t(displayValue) : displayValue;
     return (
       <FilterItem
         ref={ref}
@@ -58,7 +60,7 @@ const FilterIndicator = forwardRef<HTMLButtonElement, IndicatorProps>(
         )}
         <div>
           <FilterName>
-            {name}
+            {name ? t(name) : name}
             {resultValue ? ': ' : ''}
           </FilterName>
           <FilterValue>{resultValue}</FilterValue>
