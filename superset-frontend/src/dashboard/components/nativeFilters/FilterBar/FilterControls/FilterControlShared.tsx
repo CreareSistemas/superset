@@ -152,6 +152,11 @@ export const VerticalFormItem = styled(StyledFormItem)<{
   }
 `;
 
+// Width of a filter control in the horizontal filter bar, plus the extra
+// room taken by the "Is / Is not" selector of inverse-selection filters
+const HORIZONTAL_CONTROL_WIDTH = 260;
+const INVERSE_SELECTION_WIDTH = 88;
+
 export const HorizontalFormItem = styled(StyledFormItem)<{
   inverseSelection?: boolean;
 }>`
@@ -177,15 +182,19 @@ export const HorizontalFormItem = styled(StyledFormItem)<{
     }
   }
 
+  /* Creare: wide enough for the action placeholders ("Selecione o(s) ...") */
   .ant-form-item-control {
-    min-width: ${({ inverseSelection }) => (inverseSelection ? 252 : 164)}px;
+    min-width: ${({ inverseSelection }) =>
+      inverseSelection
+        ? HORIZONTAL_CONTROL_WIDTH + INVERSE_SELECTION_WIDTH
+        : HORIZONTAL_CONTROL_WIDTH}px;
   }
 
   .select-container {
     ${({ inverseSelection }) =>
       inverseSelection &&
       `
-      width: 164px;
+      width: ${HORIZONTAL_CONTROL_WIDTH}px;
     `}
   }
 

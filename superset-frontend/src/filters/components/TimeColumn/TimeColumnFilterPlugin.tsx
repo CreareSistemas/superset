@@ -25,6 +25,7 @@ import {
   type FormItemProps,
   Select,
 } from '@superset-ui/core/components';
+import { getFilterPlaceholder } from '../../utils';
 import { FilterPluginStyle, StatusMessage } from '../common';
 import { PluginFilterTimeColumnProps } from './types';
 
@@ -82,7 +83,8 @@ export default function PluginFilterTimeColumn(
   const placeholderText =
     timeColumns.length === 0
       ? t('No time columns')
-      : tn('%s option', '%s options', timeColumns.length, timeColumns.length);
+      : (getFilterPlaceholder(formData.nativeFilterName) ??
+        tn('%s option', '%s options', timeColumns.length, timeColumns.length));
 
   const formItemData: FormItemProps = {};
   if (filterState.validateMessage) {

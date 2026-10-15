@@ -27,7 +27,6 @@ import {
 } from 'react';
 
 import { RouteComponentProps, useHistory } from 'react-router-dom';
-import { extendedDayjs } from '@superset-ui/core/utils/dates';
 import { t } from '@apache-superset/core/translation';
 import {
   Behavior,
@@ -38,7 +37,7 @@ import {
   BinaryQueryObjectFilterClause,
   QueryFormData,
 } from '@superset-ui/core';
-import { css, useTheme, styled } from '@apache-superset/core/theme';
+import { css, useTheme, SupersetTheme } from '@apache-superset/core/theme';
 import { useSelector } from 'react-redux';
 import { Menu, MenuItem } from '@superset-ui/core/components/Menu';
 import {
@@ -64,19 +63,6 @@ import { useCrossFiltersScopingModal } from '../nativeFilters/FilterBar/CrossFil
 import { ViewResultsModalTrigger } from './ViewResultsModalTrigger';
 import { Global } from '@emotion/react';
 import { fullscreenStyles } from './Styles';
-
-const RefreshTooltip = styled.div`
-  ${({ theme }) => css`
-    height: auto;
-    margin: ${theme.sizeUnit}px 0;
-    color: ${theme.colorTextLabel};
-    line-height: 21px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-  `}
-`;
 
 const getScreenshotNodeSelector = (chartId: string | number) =>
   `.dashboard-chart-id-${chartId}`;
@@ -147,10 +133,28 @@ export interface SliceHeaderControlsProps {
 type SliceHeaderControlsPropsWithRouter = SliceHeaderControlsProps &
   RouteComponentProps;
 
-const dropdownIconsStyles = css`
-  &&.anticon > .anticon:first-child {
-    margin-right: 0;
-    vertical-align: 0;
+// Creare: menu items follow the platform's dropdown look (rounded items,
+// primary-filled hover)
+const menuStyles = (theme: SupersetTheme) => css`
+  &&.ant-dropdown-menu {
+    padding: ${theme.sizeUnit}px;
+    border-radius: ${theme.borderRadiusLG}px;
+  }
+  && .ant-dropdown-menu-item,
+  && .ant-dropdown-menu-submenu-title {
+    margin: 0;
+    padding: ${theme.sizeUnit * 2}px ${theme.sizeUnit * 3}px;
+    line-height: ${theme.lineHeight};
+    border-radius: ${theme.borderRadius}px;
+  }
+  && .ant-dropdown-menu-item:not(.ant-dropdown-menu-item-disabled):hover,
+  && .ant-dropdown-menu-item-active:not(.ant-dropdown-menu-item-disabled),
+  && .ant-dropdown-menu-submenu-active > .ant-dropdown-menu-submenu-title {
+    background-color: ${theme.colorPrimary};
+    color: ${theme.colorTextLightSolid};
+  }
+  && .ant-dropdown-menu-submenu-active .ant-dropdown-menu-submenu-arrow-icon {
+    color: ${theme.colorTextLightSolid};
   }
 `;
 
@@ -364,47 +368,12 @@ const SliceHeaderControls = (
     dashboardId,
     slice,
     isFullSize,
-    cachedDttm = [],
-    queriedDttm = null,
-    updatedDttm = null,
     addSuccessToast = () => {},
     addDangerToast = () => {},
     supersetCanShare = false,
-    isCached = [],
   } = props;
   const isTable = slice.viz_type === VizType.Table;
   const isPivotTable = slice.viz_type === VizType.PivotTable;
-  const cachedWhen = (cachedDttm || []).map(itemCachedDttm =>
-    (extendedDayjs.utc(itemCachedDttm) as any).fromNow(),
-  );
-  const updatedWhen = updatedDttm
-    ? (extendedDayjs.utc(updatedDttm) as any).fromNow()
-    : '';
-  const getCachedTitle = (itemCached: boolean) => {
-    if (itemCached) {
-      return t('Cached %s', cachedWhen);
-    }
-    if (updatedWhen) {
-      return t('Fetched %s', updatedWhen);
-    }
-    return '';
-  };
-  const refreshTooltipData = [...new Set(isCached.map(getCachedTitle) || '')];
-  // If all queries have same cache time we can unit them to one
-  const refreshTooltip = refreshTooltipData.map((item, index) => (
-    <div key={`tooltip-${index}`}>
-      {refreshTooltipData.length > 1
-        ? t('Query %s: %s', index + 1, item)
-        : item}
-    </div>
-  ));
-
-  const queriedLabel = queriedDttm
-    ? extendedDayjs.utc(queriedDttm).local().format('L LTS')
-    : null;
-  const fullscreenLabel = isFullSize
-    ? t('Exit fullscreen')
-    : t('Enter fullscreen');
 
   // Use theme.zIndexPopupBase to keep dropdown above fullscreen (+1) or below dashboard header (-1)
   const dropdownOverlayStyle = {
@@ -412,34 +381,9 @@ const SliceHeaderControls = (
     animationDuration: '0s',
   };
 
-  const newMenuItems: MenuItem[] = [
-    {
-      key: MenuKeys.ForceRefresh,
-      label: (
-        <Tooltip
-          title={queriedLabel ? `${t('Last queried at')}: ${queriedLabel}` : ''}
-          overlayStyle={{ maxWidth: 'none' }}
-        >
-          <div>
-            {t('Force refresh')}
-            <RefreshTooltip data-test="dashboard-slice-refresh-tooltip">
-              {refreshTooltip}
-            </RefreshTooltip>
-          </div>
-        </Tooltip>
-      ),
-      disabled: props.chartStatus === 'loading',
-      style: { height: 'auto', lineHeight: 'initial' },
-      'data-test': 'refresh-chart-menu-item', // Typescript hack to get around MenuItem type
-    } as any,
-    {
-      key: MenuKeys.Fullscreen,
-      label: fullscreenLabel,
-    },
-    {
-      type: 'divider',
-    },
-  ];
+  // Creare: no "Force refresh" (data is refreshed hourly) nor "Enter
+  // fullscreen" items
+  const newMenuItems: MenuItem[] = [];
 
   if (slice.description) {
     newMenuItems.push({
@@ -554,59 +498,49 @@ const SliceHeaderControls = (
     newMenuItems.push(shareMenuItems);
   }
 
+  // Creare: downloads go straight in the menu (no "Download" submenu and no
+  // "Download as image", which was only a screenshot of the chart)
   if (props.supersetCanCSV) {
-    newMenuItems.push({
-      type: 'submenu',
-      key: MenuKeys.Download,
-      label: t('Download'),
-      children: [
-        {
-          key: MenuKeys.ExportCsv,
-          label: t('Export to .CSV'),
-          icon: <Icons.FileOutlined css={dropdownIconsStyles} />,
-        },
-        ...(isPivotTable
-          ? [
-              {
-                key: MenuKeys.ExportPivotCsv,
-                label: t('Export to Pivoted .CSV'),
-                icon: <Icons.FileOutlined css={dropdownIconsStyles} />,
-              },
-              {
-                key: MenuKeys.ExportPivotXlsx,
-                label: t('Export to Pivoted Excel'),
-                icon: <Icons.FileOutlined css={dropdownIconsStyles} />,
-              },
-            ]
-          : []),
-        {
-          key: MenuKeys.ExportXlsx,
-          label: t('Export to Excel'),
-          icon: <Icons.FileOutlined css={dropdownIconsStyles} />,
-        },
-        ...(isFeatureEnabled(FeatureFlag.AllowFullCsvExport) &&
-        props.supersetCanCSV &&
-        isTable
-          ? [
-              {
-                key: MenuKeys.ExportFullCsv,
-                label: t('Export to full .CSV'),
-                icon: <Icons.FileOutlined css={dropdownIconsStyles} />,
-              },
-              {
-                key: MenuKeys.ExportFullXlsx,
-                label: t('Export to full Excel'),
-                icon: <Icons.FileOutlined css={dropdownIconsStyles} />,
-              },
-            ]
-          : []),
-        {
-          key: MenuKeys.DownloadAsImage,
-          label: t('Download as image'),
-          icon: <Icons.FileImageOutlined css={dropdownIconsStyles} />,
-        },
-      ],
-    });
+    const lastItem = newMenuItems[newMenuItems.length - 1] as
+      | { type?: string }
+      | undefined;
+    if (lastItem && lastItem.type !== 'divider') {
+      newMenuItems.push({ type: 'divider' });
+    }
+    newMenuItems.push(
+      {
+        key: MenuKeys.ExportCsv,
+        label: t('Download as .CSV'),
+      },
+      {
+        key: MenuKeys.ExportXlsx,
+        label: t('Download as .XLSX'),
+      },
+      ...(isPivotTable
+        ? [
+            {
+              key: MenuKeys.ExportPivotCsv,
+              label: t('Export to Pivoted .CSV'),
+            },
+            {
+              key: MenuKeys.ExportPivotXlsx,
+              label: t('Export to Pivoted Excel'),
+            },
+          ]
+        : []),
+      ...(isFeatureEnabled(FeatureFlag.AllowFullCsvExport) && isTable
+        ? [
+            {
+              key: MenuKeys.ExportFullCsv,
+              label: t('Export to full .CSV'),
+            },
+            {
+              key: MenuKeys.ExportFullXlsx,
+              label: t('Export to full Excel'),
+            },
+          ]
+        : []),
+    );
   }
 
   useEffect(() => {
@@ -644,6 +578,7 @@ const SliceHeaderControls = (
       <NoAnimationDropdown
         popupRender={() => (
           <Menu
+            css={menuStyles}
             onClick={handleMenuClick}
             data-test={`slice_${slice.slice_id}-menu`}
             id={`slice_${slice.slice_id}-menu`}

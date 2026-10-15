@@ -24,8 +24,10 @@ import {
   TimeFormats,
 } from '@superset-ui/core';
 import { GenericDataType } from '@apache-superset/core/common';
+import { configure, LanguagePack } from '@apache-superset/core/translation';
 import {
   getDataRecordFormatter,
+  getFilterPlaceholder,
   getRangeExtraFormData,
   getSelectExtraFormData,
 } from 'src/filters/utils';
@@ -220,4 +222,54 @@ describe('Filter utils', () => {
       ).toEqual('1970-01-01 00:00:00');
     });
   });
+});
+
+const languagePack = (translations: Record<string, string[]>) =>
+  ({
+    domain: 'superset',
+    locale_data: {
+      superset: {
+        '': { domain: 'superset', lang: 'pt_BR', plural_forms: '' },
+        ...translations,
+      },
+    },
+  }) as unknown as LanguagePack;
+
+afterEach(() => configure());
+
+test('getFilterPlaceholder returns the default without a filter name', () => {
+  expect(getFilterPlaceholder(undefined, 'Select the period')).toBe(
+    'Select the period',
+  );
+  expect(getFilterPlaceholder(undefined)).toBeUndefined();
+});
+
+test('getFilterPlaceholder builds an action placeholder from the translated name', () => {
+  expect(getFilterPlaceholder('Region')).toBe('Select region');
+
+  configure({
+    languagePack: languagePack({
+      Vehicle_id: ['Veículo'],
+      'Select %s': ['Selecione o(s) %s(s)'],
+    }),
+  });
+  expect(getFilterPlaceholder('Vehicle_id')).toBe('Selecione o(s) veículo(s)');
+});
+
+test('getFilterPlaceholder prefers the "<name>_placeholder" translation', () => {
+  configure({
+    languagePack: languagePack({
+      Org_uuid_placeholder: ['Selecione a(s) organização(ões)'],
+      'Select %s': ['Selecione o(s) %s(s)'],
+    }),
+  });
+  expect(getFilterPlaceholder('Org_uuid')).toBe(
+    'Selecione a(s) organização(ões)',
+  );
+  expect(getFilterPlaceholder('Org_uuid', 'Select the period')).toBe(
+    'Selecione a(s) organização(ões)',
+  );
+  expect(getFilterPlaceholder('period', 'Select the period')).toBe(
+    'Select the period',
+  );
 });

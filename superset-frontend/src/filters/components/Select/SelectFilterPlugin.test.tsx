@@ -385,6 +385,38 @@ describe('SelectFilterPlugin', () => {
     expect(await screen.findByTitle('new value')).toBeInTheDocument();
   });
 
+  test.each([
+    ['Gender', 'Select gender'],
+    [undefined, '3 options'],
+  ])(
+    'empty filter named %s shows the placeholder "%s"',
+    (nativeFilterName, placeholder) => {
+      render(
+        // @ts-expect-error
+        <SelectFilterPlugin
+          // @ts-expect-error
+          {...transformProps({
+            ...selectMultipleProps,
+            formData: {
+              ...selectMultipleProps.formData,
+              defaultValue: undefined,
+              nativeFilterName,
+            },
+            filterState: {},
+          })}
+          setDataMask={setDataMask}
+          showOverflow={false}
+        />,
+        {
+          useRedux: true,
+          initialState: { nativeFilters: { filters: {} }, dataMask: {} },
+        },
+      );
+
+      expect(screen.getByText(placeholder)).toBeInTheDocument();
+    },
+  );
+
   test('preserves backend order when sortMetric is specified', () => {
     const testData = [
       { gender: 'zebra' },

@@ -646,6 +646,65 @@ test('handleClearAll only dispatches for filters present in dataMask', async () 
   updateDataMaskSpy.mockRestore();
 });
 
+test('Clear All applies the cleared filters without clicking Apply', async () => {
+  const filterId = 'NATIVE_FILTER-clear-and-apply';
+  const updateDataMaskSpy = jest.spyOn(dataMaskActions, 'updateDataMask');
+  const selectFilter = createFilter({
+    id: filterId,
+    name: 'Region',
+    filterType: 'filter_select',
+    targets: [{ datasetId: 7, column: { name: 'region' } }],
+    defaultDataMask: { filterState: { value: null }, extraFormData: {} },
+    chartsInScope: [18],
+  });
+  const stateWithSelect = {
+    ...stateWithoutNativeFilters,
+    dashboardInfo: {
+      id: 1,
+      dash_edit_perm: true,
+      filterBarOrientation: FilterBarOrientation.Vertical,
+      metadata: {
+        native_filter_configuration: [selectFilter],
+        chart_configuration: {},
+      },
+    },
+    dashboardState: {
+      ...stateWithoutNativeFilters.dashboardState,
+      activeTabs: ['ROOT_ID'],
+    },
+    dataMask: {
+      [filterId]: createDataMask(filterId, ['East']),
+    },
+    nativeFilters: {
+      filters: { [filterId]: selectFilter },
+      filtersState: {},
+    },
+  };
+
+  renderFilterBar(createOpenedBarProps(), stateWithSelect);
+  await act(async () => {
+    jest.advanceTimersByTime(300);
+  });
+
+  await act(async () => {
+    userEvent.click(screen.getByTestId(getTestId('clear-button')));
+  });
+  const callsAfterClear = updateDataMaskSpy.mock.calls.length;
+
+  await act(async () => {
+    jest.advanceTimersByTime(500);
+  });
+
+  // handleApply ran on its own and dispatched the cleared filter
+  expect(updateDataMaskSpy.mock.calls.length).toBeGreaterThan(callsAfterClear);
+  expect(updateDataMaskSpy).toHaveBeenLastCalledWith(
+    filterId,
+    expect.objectContaining({ extraFormData: {} }),
+  );
+  expect(screen.getByTestId(getTestId('apply-button'))).toBeDisabled();
+  updateDataMaskSpy.mockRestore();
+});
+
 test('FilterBar Clear All only clears in-scope filters, not out-of-scope ones', async () => {
   const inScopeFilterId = 'NATIVE_FILTER-in-scope';
   const outOfScopeRequiredFilterId = 'NATIVE_FILTER-out-of-scope-required';

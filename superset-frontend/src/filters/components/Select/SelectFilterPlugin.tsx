@@ -45,7 +45,11 @@ import {
   propertyComparator,
 } from '@superset-ui/core/components/Select/utils';
 import { FilterBarOrientation } from 'src/dashboard/types';
-import { getDataRecordFormatter, getSelectExtraFormData } from '../../utils';
+import {
+  getDataRecordFormatter,
+  getFilterPlaceholder,
+  getSelectExtraFormData,
+} from '../../utils';
 import { FilterPluginStyle, StatusMessage } from '../common';
 import { PluginFilterSelectProps, SelectValue } from './types';
 
@@ -279,7 +283,8 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
   const placeholderText =
     data.length === 0
       ? t('No data')
-      : tn('%s option', '%s options', data.length, data.length);
+      : (getFilterPlaceholder(formData.nativeFilterName) ??
+        tn('%s option', '%s options', data.length, data.length));
 
   const formItemExtra = useMemo(() => {
     if (filterState.validateMessage) {

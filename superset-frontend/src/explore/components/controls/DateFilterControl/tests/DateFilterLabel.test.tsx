@@ -74,6 +74,26 @@ test('DateFilter should be applied the global config time_filter from the store'
   expect(screen.getByTestId(DateFilterTestKey.CommonFrame)).toBeInTheDocument();
 });
 
+test('DateFilter shows the placeholder instead of "No filter" when empty', () => {
+  render(setup({ ...defaultProps, placeholder: 'Select the period' }));
+
+  expect(screen.getByText('Select the period')).toBeInTheDocument();
+  expect(screen.queryByText(NO_TIME_RANGE)).not.toBeInTheDocument();
+});
+
+test('DateFilter ignores the placeholder when a range is set', () => {
+  render(
+    setup({
+      ...defaultProps,
+      value: 'Last week',
+      placeholder: 'Select the period',
+    }),
+  );
+
+  expect(screen.getByText('Last week')).toBeInTheDocument();
+  expect(screen.queryByText('Select the period')).not.toBeInTheDocument();
+});
+
 test('Open and close popover', () => {
   render(setup());
 
@@ -113,6 +133,25 @@ test('DateFilter popover should attach to parent node when overflowing in filter
 
   expect(popover?.parentElement).toBe(trigger.parentElement);
 });
+
+test.each([
+  [false, true],
+  [true, false],
+])(
+  'DateFilter with specificRangeOnly=%s shows hover tooltip: %s',
+  async (specificRangeOnly, showsTooltip) => {
+    render(setup({ ...defaultProps, value: 'Last week', specificRangeOnly }));
+
+    userEvent.hover(screen.getByTestId(DateFilterTestKey.PopoverOverlay));
+
+    if (showsTooltip) {
+      expect(await screen.findByRole('tooltip')).toBeInTheDocument();
+    } else {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    }
+  },
+);
 
 test('DateFilter should properly handle isOverflowingFilterBar prop changes', () => {
   const { rerender } = render(
