@@ -125,6 +125,27 @@ describe('SelectFilterPlugin', () => {
     jest.clearAllMocks();
   });
 
+  test('multi-select options show a checkbox with the selected state', async () => {
+    getWrapper();
+    userEvent.click(screen.getAllByRole('combobox')[0]);
+    await screen.findByTitle('girl');
+
+    const getOption = (title: string) =>
+      screen
+        .getAllByTitle(title)
+        .find(el => el.classList.contains('ant-select-item-option'));
+
+    expect(
+      getOption('boy')?.querySelector('.ant-checkbox-checked'),
+    ).toBeInTheDocument();
+    expect(
+      getOption('girl')?.querySelector('.ant-checkbox'),
+    ).toBeInTheDocument();
+    expect(
+      getOption('girl')?.querySelector('.ant-checkbox-checked'),
+    ).not.toBeInTheDocument();
+  });
+
   test('Add multiple values with first render', async () => {
     getWrapper();
     expect(setDataMask).toHaveBeenCalledWith({

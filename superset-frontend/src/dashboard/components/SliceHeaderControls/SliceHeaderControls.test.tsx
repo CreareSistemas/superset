@@ -17,7 +17,12 @@
  * under the License.
  */
 
-import { render, screen, userEvent } from 'spec/helpers/testing-library';
+import {
+  render,
+  screen,
+  userEvent,
+  waitFor,
+} from 'spec/helpers/testing-library';
 import { FeatureFlag, VizType } from '@superset-ui/core';
 import mockState from 'spec/fixtures/mockState';
 import { cachedSupersetGet } from 'src/utils/cachedSupersetGet';
@@ -122,6 +127,13 @@ const openMenu = () => {
   userEvent.click(screen.getByRole('button', { name: 'More Options' }));
 };
 
+const mockFullscreenElement = (getElement: () => Element | null) => {
+  Object.defineProperty(document, 'fullscreenElement', {
+    configurable: true,
+    get: getElement,
+  });
+};
+
 beforeEach(() => {
   mockCachedSupersetGet.mockClear();
   mockCachedSupersetGet.mockResolvedValue({
@@ -133,6 +145,10 @@ beforeEach(() => {
       },
     },
   });
+});
+
+afterEach(() => {
+  Reflect.deleteProperty(document, 'fullscreenElement');
 });
 
 test('Should render', () => {
@@ -160,10 +176,15 @@ test('Should render default props', () => {
 
   renderWrapper(props);
   openMenu();
+  expect(screen.getByText('Enter fullscreen')).toBeInTheDocument();
+  expect(screen.getByText('Force refresh')).toBeInTheDocument();
   expect(screen.getByText('Show chart description')).toBeInTheDocument();
   expect(screen.getByText('Edit chart')).toBeInTheDocument();
-  expect(screen.getByText('Download as .CSV')).toBeInTheDocument();
-  expect(screen.getByText('Download as .XLSX')).toBeInTheDocument();
+  // downloads are straight in the menu, without the "Download" submenu
+  expect(screen.queryByText('Download')).not.toBeInTheDocument();
+  expect(screen.getByText('Export to .CSV')).toBeInTheDocument();
+  expect(screen.getByText('Export to Excel')).toBeInTheDocument();
+  expect(screen.getByText('Download as image')).toBeInTheDocument();
   expect(screen.getByText('Share')).toBeInTheDocument();
 
   expect(
@@ -177,7 +198,7 @@ test('Should "export to CSV"', async () => {
   renderWrapper(props);
   openMenu();
   expect(props.exportCSV).toHaveBeenCalledTimes(0);
-  userEvent.click(await screen.findByText('Download as .CSV'));
+  userEvent.click(await screen.findByText('Export to .CSV'));
   expect(props.exportCSV).toHaveBeenCalledTimes(1);
   expect(props.exportCSV).toHaveBeenCalledWith(371);
 });
@@ -187,7 +208,7 @@ test('Should "export to Excel"', async () => {
   renderWrapper(props);
   openMenu();
   expect(props.exportXLSX).toHaveBeenCalledTimes(0);
-  userEvent.click(await screen.findByText('Download as .XLSX'));
+  userEvent.click(await screen.findByText('Export to Excel'));
   expect(props.exportXLSX).toHaveBeenCalledTimes(1);
   expect(props.exportXLSX).toHaveBeenCalledWith(371);
 });
@@ -199,7 +220,7 @@ test('Export full CSV is under featureflag', async () => {
   const props = createProps(VizType.Table);
   renderWrapper(props);
   openMenu();
-  expect(await screen.findByText('Download as .CSV')).toBeInTheDocument();
+  expect(await screen.findByText('Export to .CSV')).toBeInTheDocument();
   expect(screen.queryByText('Export to full .CSV')).not.toBeInTheDocument();
 });
 
@@ -222,7 +243,7 @@ test('Should not show export full CSV if report is not table', async () => {
   };
   renderWrapper();
   openMenu();
-  expect(await screen.findByText('Download as .CSV')).toBeInTheDocument();
+  expect(await screen.findByText('Export to .CSV')).toBeInTheDocument();
   expect(screen.queryByText('Export to full .CSV')).not.toBeInTheDocument();
 });
 
@@ -233,7 +254,7 @@ test('Export full Excel is under featureflag', async () => {
   const props = createProps(VizType.Table);
   renderWrapper(props);
   openMenu();
-  expect(await screen.findByText('Download as .XLSX')).toBeInTheDocument();
+  expect(await screen.findByText('Export to Excel')).toBeInTheDocument();
   expect(screen.queryByText('Export to full Excel')).not.toBeInTheDocument();
 });
 
@@ -256,7 +277,7 @@ test('Should not show export full Excel if report is not table', async () => {
   };
   renderWrapper();
   openMenu();
-  expect(await screen.findByText('Download as .XLSX')).toBeInTheDocument();
+  expect(await screen.findByText('Export to Excel')).toBeInTheDocument();
   expect(screen.queryByText('Export to full Excel')).not.toBeInTheDocument();
 });
 
@@ -283,13 +304,72 @@ test('Should "Show chart description"', () => {
   expect(props.toggleExpandSlice).toHaveBeenCalledWith(371);
 });
 
-test('Should not show "Force refresh", fullscreen nor "Download as image"', () => {
-  renderWrapper();
+test('Should "Force refresh"', () => {
+  const props = createProps();
+  renderWrapper(props);
   openMenu();
-  expect(screen.queryByText('Force refresh')).not.toBeInTheDocument();
-  expect(screen.queryByText('Enter fullscreen')).not.toBeInTheDocument();
-  expect(screen.queryByText('Download')).not.toBeInTheDocument();
-  expect(screen.queryByText('Download as image')).not.toBeInTheDocument();
+  expect(props.forceRefresh).toHaveBeenCalledTimes(0);
+  userEvent.click(screen.getByText('Force refresh'));
+  expect(props.forceRefresh).toHaveBeenCalledTimes(1);
+  expect(props.forceRefresh).toHaveBeenCalledWith(371, 26);
+  expect(props.addSuccessToast).toHaveBeenCalledTimes(1);
+});
+
+test('Should sync local state after entering fullscreen', async () => {
+  const mockDiv = document.createElement('div');
+  let fullscreenElement: Element | null = null;
+  mockFullscreenElement(() => fullscreenElement);
+  mockDiv.requestFullscreen = jest.fn().mockImplementation(async () => {
+    fullscreenElement = mockDiv;
+  });
+  const originalExitFullscreen = document.exitFullscreen;
+  (document as any).exitFullscreen = jest.fn().mockResolvedValue(undefined);
+  const props = {
+    ...createProps(),
+    chartHolderRef: { current: mockDiv },
+  };
+  renderWrapper(props);
+  openMenu();
+  expect(props.handleToggleFullSize).toHaveBeenCalledTimes(0);
+  const fullscreenItem = screen.getByRole('menuitem', {
+    name: /enter fullscreen/i,
+  });
+  await userEvent.click(fullscreenItem);
+  expect(props.handleToggleFullSize).toHaveBeenCalledTimes(0);
+  expect(mockDiv.requestFullscreen).toHaveBeenCalled();
+  document.dispatchEvent(new Event('fullscreenchange'));
+  await waitFor(() => {
+    expect(props.handleToggleFullSize).toHaveBeenCalledTimes(1);
+  });
+  (document as any).exitFullscreen = originalExitFullscreen;
+});
+
+test('Should sync local state after exiting fullscreen', async () => {
+  const mockDiv = document.createElement('div');
+  let fullscreenElement: Element | null = mockDiv;
+  mockFullscreenElement(() => fullscreenElement);
+  const originalExitFullscreen = document.exitFullscreen;
+  (document as any).exitFullscreen = jest.fn().mockImplementation(async () => {
+    fullscreenElement = null;
+  });
+  const props = {
+    ...createProps(),
+    isFullSize: true,
+    chartHolderRef: { current: mockDiv },
+  };
+  renderWrapper(props);
+  openMenu();
+  const fullscreenItem = screen.getByRole('menuitem', {
+    name: /exit fullscreen/i,
+  });
+  await userEvent.click(fullscreenItem);
+  expect(props.handleToggleFullSize).toHaveBeenCalledTimes(0);
+  expect(document.exitFullscreen).toHaveBeenCalledTimes(1);
+  document.dispatchEvent(new Event('fullscreenchange'));
+  await waitFor(() => {
+    expect(props.handleToggleFullSize).toHaveBeenCalledTimes(1);
+  });
+  (document as any).exitFullscreen = originalExitFullscreen;
 });
 
 test('Drill to detail modal is under featureflag', () => {

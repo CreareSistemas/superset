@@ -33,6 +33,7 @@ import {
   SEVEN_DAYS_AGO,
   customTimeRangeEncode,
   dttmToDayjs,
+  getDateDisplayFormat,
 } from 'src/explore/components/controls/DateFilterControl/utils';
 import {
   CustomRangeKey,
@@ -44,13 +45,11 @@ import { useLocale } from 'src/hooks/useLocale';
 import { ExplorePageState } from 'src/explore/types';
 
 // Display format of the date pickers (the stored value keeps DAYJS_FORMAT):
-// day/month/year for Portuguese and Spanish, ISO otherwise; no seconds
-const DAY_FIRST_LOCALES = ['pt', 'pt_BR', 'es'];
+// day/month/year for Portuguese and Spanish, month/day/year for English, ISO
+// otherwise; no seconds
 const TIME_FORMAT = 'HH:mm';
 const getDisplayFormat = (locale?: string) =>
-  locale && DAY_FIRST_LOCALES.includes(locale)
-    ? `DD/MM/YYYY ${TIME_FORMAT}`
-    : `YYYY-MM-DD ${TIME_FORMAT}`;
+  `${getDateDisplayFormat(locale)} ${TIME_FORMAT}`;
 
 /**
  * Simplified custom frame: only a specific start and end date/time.

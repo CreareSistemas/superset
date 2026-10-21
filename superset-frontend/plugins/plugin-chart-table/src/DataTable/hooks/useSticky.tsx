@@ -76,6 +76,8 @@ export interface StickyState {
   realHeight?: number; // actual table viewport height (header + scrollable area)
   bodyHeight?: number; // scrollable area height
   tableHeight?: number; // the full table height
+  theadHeight?: number; // measured header height
+  tfootHeight?: number; // measured footer height
   columnWidths?: ColumnWidths;
   hasHorizontalScroll?: boolean;
   hasVerticalScroll?: boolean;
@@ -109,6 +111,54 @@ const mergeStyleProp = (
   },
 });
 const fixedTableLayout: CSSProperties = { tableLayout: 'fixed' };
+
+/**
+ * Sizes of the scrollable area for the given container, from the measured
+ * table (header, footer, full height and column widths).
+ */
+function getStickySize({
+  maxWidth,
+  maxHeight,
+  theadHeight,
+  tfootHeight,
+  tableHeight,
+  columnWidths,
+  scrollBarSize,
+}: {
+  maxWidth: number;
+  maxHeight: number;
+  theadHeight: number;
+  tfootHeight: number;
+  tableHeight: number;
+  columnWidths: ColumnWidths;
+  scrollBarSize: number;
+}): StickyState {
+  const [hasVerticalScroll, hasHorizontalScroll] = needScrollBar({
+    width: maxWidth,
+    height: maxHeight - theadHeight - tfootHeight,
+    innerHeight: tableHeight,
+    innerWidth: columnWidths.reduce(sum),
+    scrollBarSize,
+  });
+  // real container height, include table header, footer and space for
+  // horizontal scroll bar
+  const realHeight = Math.min(
+    maxHeight,
+    hasHorizontalScroll ? tableHeight + scrollBarSize : tableHeight,
+  );
+  return {
+    hasVerticalScroll,
+    hasHorizontalScroll,
+    width: maxWidth,
+    height: maxHeight,
+    realHeight,
+    tableHeight,
+    theadHeight,
+    tfootHeight,
+    bodyHeight: realHeight - theadHeight - tfootHeight,
+    columnWidths,
+  };
+}
 
 /**
  * An HOC for generating sticky header and fixed-height scrollable area
@@ -167,11 +217,20 @@ function StickyWrap({
 
   const scrollBarSize = getScrollBarSize();
   const { bodyHeight, columnWidths, hasVerticalScroll } = sticky;
+  // Creare: the column widths do not depend on the height (the sizer always
+  // reserves the vertical scroll bar gutter), so a change of the height alone
+  // (e.g. the chart fitted to the viewport when the filter bar opens/closes)
+  // reuses the measured table instead of rendering a hidden copy of all rows
+  const measured =
+    !!columnWidths &&
+    sticky.tableHeight !== undefined &&
+    sticky.theadHeight !== undefined;
   const needSizer =
     !columnWidths ||
     sticky.width !== maxWidth ||
-    sticky.height !== maxHeight ||
+    (sticky.height !== maxHeight && !measured) ||
     sticky.setStickyState !== setStickyState;
+  const heightChangedOnly = !needSizer && sticky.height !== maxHeight;
 
   // update scrollable area and header column sizes when mounted
   useLayoutEffect(() => {
@@ -193,31 +252,39 @@ function StickyWrap({
     const widths = Array.from(ths).map(
       th => th.getBoundingClientRect()?.width || th.clientWidth,
     );
-    const [hasVerticalScroll, hasHorizontalScroll] = needScrollBar({
-      width: maxWidth,
-      height: maxHeight - theadHeight - tfootHeight,
-      innerHeight: fullTableHeight,
-      innerWidth: widths.reduce(sum),
-      scrollBarSize,
-    });
-    // real container height, include table header, footer and space for
-    // horizontal scroll bar
-    const realHeight = Math.min(
-      maxHeight,
-      hasHorizontalScroll ? fullTableHeight + scrollBarSize : fullTableHeight,
-    );
     setStickyState({
-      hasVerticalScroll,
-      hasHorizontalScroll,
+      ...getStickySize({
+        maxWidth,
+        maxHeight,
+        theadHeight,
+        tfootHeight,
+        tableHeight: fullTableHeight,
+        columnWidths: widths,
+        scrollBarSize,
+      }),
       setStickyState,
-      width: maxWidth,
-      height: maxHeight,
-      realHeight,
-      tableHeight: fullTableHeight,
-      bodyHeight: realHeight - theadHeight - tfootHeight,
-      columnWidths: widths,
     });
   }, [maxWidth, maxHeight, setStickyState, scrollBarSize]);
+
+  // Creare: new height only, the table is already measured
+  useLayoutEffect(() => {
+    if (!heightChangedOnly || !columnWidths) {
+      return;
+    }
+    setStickyState({
+      ...getStickySize({
+        maxWidth,
+        maxHeight,
+        theadHeight: sticky.theadHeight ?? 0,
+        tfootHeight: sticky.tfootHeight ?? 0,
+        tableHeight: sticky.tableHeight ?? 0,
+        columnWidths,
+        scrollBarSize,
+      }),
+      setStickyState,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [heightChangedOnly, maxHeight]);
 
   let sizerTable: ReactElement | undefined;
   let headerTable: ReactElement | undefined;
@@ -397,9 +464,12 @@ function useInstance<D extends object>(instance: TableInstance<D>) {
         size,
       });
     },
-    // turning pages would also trigger a resize
+    // turning pages would also trigger a resize. Creare: not `getTableSize`,
+    // which changes with the chart size: a new size is already detected by
+    // StickyWrap (width/height), and only a new height must not measure the
+    // whole table again
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dispatch, getTableSize, page, rows],
+    [dispatch, page, rows],
   );
 
   const useStickyWrap = (renderer: TableRenderer) => {

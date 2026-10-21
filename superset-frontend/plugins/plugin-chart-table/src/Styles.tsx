@@ -152,6 +152,41 @@ export default styled.div`
       padding: ${theme.paddingXXS}px 0px;
     }
 
+    /* Creare: total of results on the left of the pages, same row */
+    .dt-pagination--with-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: ${theme.sizeUnit * 4}px;
+      min-height: ${theme.sizeUnit * 12}px;
+
+      .pagination {
+        margin-left: auto;
+      }
+    }
+
+    .dt-pagination-info {
+      min-width: 0;
+      text-align: left;
+    }
+
+    .dt-results-count {
+      display: inline-flex;
+      align-items: center;
+      gap: ${theme.sizeUnit}px;
+      font-size: ${theme.fontSizeSM}px;
+      color: ${theme.colorTextSecondary};
+      white-space: nowrap;
+    }
+
+    .dt-results-count--limited {
+      cursor: help;
+
+      .anticon {
+        color: ${theme.colorTextTertiary};
+      }
+    }
+
     .dt-pagination .pagination > li {
       display: inline;
       margin: 0 ${theme.marginXXS}px;

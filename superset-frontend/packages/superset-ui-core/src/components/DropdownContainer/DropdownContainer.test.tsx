@@ -178,3 +178,22 @@ test('component renders and functions without throwing errors', () => {
   // Basic functionality test
   expect(screen.getByText('Element 1')).toBeInTheDocument();
 });
+
+test('renders a custom dropdown trigger instead of the text and count', () => {
+  render(
+    <DropdownContainer
+      items={generateItems(3)}
+      dropdownContent={() => <div>Dropdown content</div>}
+      dropdownTriggerCount={2}
+      dropdownTriggerClassName="custom-trigger"
+      renderDropdownTrigger={({ count, open }) => (
+        <span>{`Custom trigger ${count} ${open}`}</span>
+      )}
+    />,
+  );
+  const trigger = screen.getByTestId('dropdown-container-btn');
+  expect(trigger).toHaveTextContent('Custom trigger 2 false');
+  expect(trigger).toHaveClass('custom-trigger');
+  expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.queryByText('More')).not.toBeInTheDocument();
+});

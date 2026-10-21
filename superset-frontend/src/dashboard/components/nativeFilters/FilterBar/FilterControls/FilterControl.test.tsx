@@ -47,9 +47,9 @@ const filter = {
 } as unknown as Filter;
 
 test.each([FilterBarOrientation.Horizontal, FilterBarOrientation.Vertical])(
-  'hovering the filter title shows no extra info (%s)',
+  'hovering the filter title does not open the filter card (%s)',
   async orientation => {
-    render(
+    const { container } = render(
       <FilterControl
         dataMaskSelected={{}}
         filter={filter}
@@ -71,5 +71,7 @@ test.each([FilterBarOrientation.Horizontal, FilterBarOrientation.Vertical])(
     expect(screen.queryByText('Filter type')).not.toBeInTheDocument();
     expect(screen.queryByText('Scope')).not.toBeInTheDocument();
     expect(screen.queryByText('Pick a region')).not.toBeInTheDocument();
+    // the description icon stays (the dashboard CSS hides it)
+    expect(container.querySelector('.anticon-info-circle')).toBeInTheDocument();
   },
 );

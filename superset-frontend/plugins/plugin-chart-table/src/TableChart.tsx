@@ -320,6 +320,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     totals,
     isRawRecords,
     rowCount = 0,
+    rowLimit = 0,
     columns: columnsMeta,
     alignPositiveNegative: defaultAlignPN = false,
     colorPositiveNegative: defaultColorPN = false,
@@ -1389,24 +1390,19 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     // Are not only scrollbar updates, otherwise, the table would twitch
     const scrollBarSize = getScrollBarSize();
     const { width: tableWidth, height: tableHeight } = tableSize;
-    // Table is increasing its original size
-    if (
-      width - tableWidth > scrollBarSize ||
-      height - tableHeight > scrollBarSize
-    ) {
-      handleSizeChange({
-        width: width - scrollBarSize,
-        height: height - scrollBarSize,
-      });
-    } else if (
-      tableWidth - width > scrollBarSize ||
-      tableHeight - height > scrollBarSize
-    ) {
+    let nextWidth = tableWidth;
+    if (width - tableWidth > scrollBarSize) {
+      // Table is increasing its original size
+      nextWidth = width - scrollBarSize;
+    } else if (tableWidth - width > scrollBarSize) {
       // Table is decreasing its original size
-      handleSizeChange({
-        width,
-        height,
-      });
+      nextWidth = width;
+    }
+    // Creare: the height is given by the container (it does not depend on the
+    // table scrollbars), so the table uses it exactly to end at the bottom of
+    // the chart without a blank strip
+    if (nextWidth !== tableWidth || height !== tableHeight) {
+      handleSizeChange({ width: nextWidth, height });
     }
   }, [width, height, handleSizeChange, tableSize]);
 
@@ -1492,12 +1488,50 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     serverPaginationData,
   ]);
 
+  // Creare: total of results on the pagination row. When the query reached the
+  // row limit, a tooltip explains that there may be more data
+  const resultsCountInfo = useMemo(() => {
+    const numberFormat = new Intl.NumberFormat(
+      document.documentElement.lang || undefined,
+    );
+    const formattedCount = numberFormat.format(rowCount);
+    const text =
+      rowCount === 1
+        ? t('%s result', formattedCount)
+        : t('%s results', formattedCount);
+    if (!(rowLimit > 0 && rowCount >= rowLimit)) {
+      return (
+        <span className="dt-results-count" data-test="table-results-count">
+          {text}
+        </span>
+      );
+    }
+    return (
+      <Tooltip
+        placement="right"
+        title={t(
+          'The results are limited to %s rows. There may be more data: refine the filters to see the rest.',
+          numberFormat.format(rowLimit),
+        )}
+      >
+        <span
+          className="dt-results-count dt-results-count--limited"
+          data-test="table-results-count"
+        >
+          {text}
+          <InfoCircleOutlined />
+        </span>
+      </Tooltip>
+    );
+  }, [rowCount, rowLimit]);
+
   return (
     <Styles>
       <DataTable<D>
         columns={columns}
         data={data}
         rowCount={rowCount}
+        footerInfo={resultsCountInfo}
         tableClassName="table table-striped table-condensed"
         pageSize={pageSize}
         serverPaginationData={serverPaginationData}

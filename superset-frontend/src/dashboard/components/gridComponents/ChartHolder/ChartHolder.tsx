@@ -21,6 +21,7 @@ import { useState, useMemo, useCallback, useEffect, useRef, memo } from 'react';
 import { ResizeCallback, ResizeStartCallback } from 're-resizable';
 import cx from 'classnames';
 import { useSelector } from 'react-redux';
+import { Global } from '@emotion/react';
 import { css, useTheme } from '@apache-superset/core/theme';
 import { LayoutItem, RootState } from 'src/dashboard/types';
 import AnchorLink from 'src/dashboard/components/AnchorLink';
@@ -39,8 +40,18 @@ import {
   GRID_MIN_COLUMN_COUNT,
   GRID_MIN_ROW_UNITS,
 } from 'src/dashboard/util/constants';
+import { isEmbedded } from 'src/dashboard/util/isEmbedded';
+import isChartInLastRow from 'src/dashboard/util/isChartInLastRow';
+import useFitToViewportHeight from './useFitToViewportHeight';
 
 export const CHART_MARGIN = 32;
+
+const noPageScrollStyles = css`
+  html,
+  body {
+    overflow-y: hidden;
+  }
+`;
 
 interface ChartHolderProps {
   id: string;
@@ -186,6 +197,15 @@ const ChartHolder = ({
     parentComponent.type,
   ]);
 
+  // Creare: in the embedded dashboard the last row fills the rest of the
+  // viewport, so only the chart (e.g. a table) scrolls, not the page
+  const shouldFitToViewport =
+    isEmbedded() &&
+    !editMode &&
+    !isFullSize &&
+    isChartInLastRow(component, parentComponent, getComponentById);
+  const fitHeight = useFitToViewportHeight(shouldFitToViewport, chartHolderRef);
+
   const { chartWidth, chartHeight } = useMemo(() => {
     let width = 0;
     let height = 0;
@@ -199,16 +219,18 @@ const ChartHolder = ({
           (widthMultiple - 1) * GRID_GUTTER_SIZE -
           CHART_MARGIN,
       );
-      height = Math.floor(
-        (component.meta.height ?? 0) * GRID_BASE_UNIT - CHART_MARGIN,
-      );
+      height = fitHeight
+        ? fitHeight.chartHeight
+        : Math.floor(
+            (component.meta.height ?? 0) * GRID_BASE_UNIT - CHART_MARGIN,
+          );
     }
 
     return {
       chartWidth: width,
       chartHeight: height,
     };
-  }, [columnWidth, component, isFullSize, widthMultiple]);
+  }, [columnWidth, component, fitHeight, isFullSize, widthMultiple]);
 
   const handleDeleteComponent = useCallback(() => {
     deleteComponent(id, parentId);
@@ -249,7 +271,11 @@ const ChartHolder = ({
         widthStep={columnWidth}
         widthMultiple={widthMultiple}
         heightStep={GRID_BASE_UNIT}
-        heightMultiple={component.meta.height ?? GRID_MIN_ROW_UNITS}
+        heightMultiple={
+          fitHeight
+            ? fitHeight.holderHeight / GRID_BASE_UNIT
+            : (component.meta.height ?? GRID_MIN_ROW_UNITS)
+        }
         minWidthMultiple={GRID_MIN_COLUMN_COUNT}
         minHeightMultiple={GRID_MIN_ROW_UNITS}
         maxWidthMultiple={availableColumnCount + widthMultiple}
@@ -292,6 +318,7 @@ const ChartHolder = ({
                 : document.body
             }
           >
+            {fitHeight && <Global styles={noPageScrollStyles} />}
             {!editMode && (
               <AnchorLink
                 id={component.id}
@@ -327,6 +354,7 @@ const ChartHolder = ({
               extraControls={extraControls}
               isInView={isInView}
               chartHolderRef={chartHolderRef}
+              resizeHeightImmediately={!!fitHeight}
             />
             {editMode && (
               <HoverMenu position="top">
@@ -342,6 +370,7 @@ const ChartHolder = ({
     [
       component.id,
       component.meta.height,
+      fitHeight,
       component.meta.chartId,
       component.meta.sliceNameOverride,
       component.meta.sliceName,

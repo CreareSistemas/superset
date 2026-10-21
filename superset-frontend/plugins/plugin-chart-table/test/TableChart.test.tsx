@@ -173,6 +173,57 @@ describe('plugin-chart-table', () => {
       );
     });
 
+    test('keeps the formatters and the label map when only the size changes', () => {
+      const props = {
+        ...testData.basic,
+        rawFormData: {
+          ...testData.basic.rawFormData,
+          slice_id: 4242,
+          conditional_formatting: [],
+        },
+      };
+      const before = transformProps(props);
+      const after = transformProps({ ...props, height: 900, width: 700 });
+
+      expect(after.height).toBe(900);
+      expect(after.columnColorFormatters).toBe(before.columnColorFormatters);
+      expect(after.columnLabelToNameMap).toBe(before.columnLabelToNameMap);
+      expect(after.basicColorColumnFormatters).toBe(
+        before.basicColorColumnFormatters,
+      );
+    });
+
+    test('computes the formatters again when the form data changes', () => {
+      const props = {
+        ...testData.basic,
+        rawFormData: {
+          ...testData.basic.rawFormData,
+          slice_id: 4343,
+          conditional_formatting: [],
+        },
+      };
+      const before = transformProps(props);
+      const after = transformProps({
+        ...props,
+        rawFormData: {
+          ...props.rawFormData,
+          conditional_formatting: [
+            {
+              column: 'sum__num',
+              operator: '>',
+              targetValue: 10,
+              colorScheme: '#FF0000',
+            },
+          ],
+        },
+      });
+
+      expect(after.columnColorFormatters).not.toBe(
+        before.columnColorFormatters,
+      );
+      expect(after.columnColorFormatters).toHaveLength(1);
+    });
+
     test('should memoize columns meta', () => {
       expect(transformProps(testData.basic).columns).toBe(
         transformProps({
@@ -2340,4 +2391,44 @@ describe('plugin-chart-table', () => {
       expect(filters[0].val).toEqual(['Michael']);
     });
   });
+});
+
+// Creare: total of results on the pagination row
+test('shows the total of results on the pagination row', () => {
+  render(
+    ProviderWrapper({
+      children: (
+        <TableChart {...transformProps(testData.basic)} sticky={false} />
+      ),
+    }),
+  );
+  const count = screen.getByTestId('table-results-count');
+  expect(count).toHaveTextContent('100 results');
+  expect(count.closest('.dt-pagination')).toBeInTheDocument();
+  expect(count).not.toHaveClass('dt-results-count--limited');
+});
+
+test('warns that the results may be limited when the row limit is reached', async () => {
+  render(
+    ProviderWrapper({
+      children: (
+        <TableChart
+          {...transformProps({
+            ...testData.basic,
+            rawFormData: { ...testData.basic.rawFormData, row_limit: 100 },
+          })}
+          sticky={false}
+        />
+      ),
+    }),
+  );
+  const count = screen.getByTestId('table-results-count');
+  expect(count).toHaveClass('dt-results-count--limited');
+
+  fireEvent.mouseEnter(count);
+  expect(
+    await screen.findByText(
+      'The results are limited to 100 rows. There may be more data: refine the filters to see the rest.',
+    ),
+  ).toBeInTheDocument();
 });

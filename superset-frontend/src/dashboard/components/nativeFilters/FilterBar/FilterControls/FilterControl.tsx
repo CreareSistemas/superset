@@ -33,6 +33,7 @@ import { useIsFilterInScope } from '../../state';
 import {
   FilterStyledIcon,
   RequiredFieldIndicator,
+  DescriptionToolTip,
   useFilterControlDisplay,
 } from './FilterControlShared';
 import GroupByFilterCard from './GroupByFilterCard';
@@ -69,8 +70,6 @@ const FilterControl = ({
     FilterControlTitle,
   } = useFilterControlDisplay(orientation, overflow, inverseSelection);
 
-  // Creare: no hover info on the filter title (no description tooltip and no
-  // FilterCard popover below), it only confused report users.
   const label = useMemo(
     () => (
       <FilterControlTitleBox>
@@ -81,10 +80,20 @@ const FilterControl = ({
           {t(name)}
         </FilterControlTitle>
         {isRequired && <RequiredFieldIndicator />}
+        {filter.description?.trim() && (
+          <DescriptionToolTip description={filter.description} />
+        )}
         <FilterStyledIcon data-test="filter-icon">{icon}</FilterStyledIcon>
       </FilterControlTitleBox>
     ),
-    [FilterControlTitleBox, FilterControlTitle, name, isRequired, icon],
+    [
+      FilterControlTitleBox,
+      FilterControlTitle,
+      name,
+      isRequired,
+      filter.description,
+      icon,
+    ],
   );
 
   if (
@@ -130,6 +139,8 @@ const FilterControl = ({
             : 'vertical'
         }
       >
+        {/* Creare: no FilterCard popover (name/type/scope) on hover, it only
+            confused report users */}
         <div>
           <FormItem
             label={label}

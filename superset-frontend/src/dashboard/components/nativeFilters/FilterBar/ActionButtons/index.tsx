@@ -30,6 +30,7 @@ import { Button, Tooltip, Icons, Flex } from '@superset-ui/core/components';
 import tinycolor from 'tinycolor2';
 import { FilterBarOrientation } from 'src/dashboard/types';
 import { getFilterBarTestId } from '../utils';
+import { useFilterBarCollapse } from '../FilterBarCollapse';
 
 interface ActionButtonsProps {
   onApply: () => void;
@@ -62,6 +63,7 @@ const ButtonsContainer = styled.div<{ isVertical: boolean }>`
         `
       : css`
           align-items: center;
+          gap: ${theme.sizeUnit * 3}px;
           margin-left: auto;
         `}
   `}
@@ -74,7 +76,7 @@ const applyButtonStyle = (theme: SupersetTheme, isVertical: boolean) => css`
   `}
 `;
 
-const clearAllButtonStyle = (theme: SupersetTheme, isVertical: boolean) => css`
+const clearAllButtonStyle = (theme: SupersetTheme) => css`
   && {
     color: ${theme.colorTextSecondary};
     margin-left: 0;
@@ -87,12 +89,6 @@ const clearAllButtonStyle = (theme: SupersetTheme, isVertical: boolean) => css`
     &[disabled]:hover {
       color: ${theme.colorTextDisabled};
     }
-
-    ${!isVertical &&
-    css`
-      text-transform: capitalize;
-      font-weight: ${theme.fontWeightNormal};
-    `}
   }
 `;
 
@@ -136,46 +132,85 @@ const ActionButtons = ({
     return hasSelectedChanges || hasAppliedChanges || hasChartCustomizations;
   }, [dataMaskSelected, dataMaskApplied, chartCustomizationItems]);
 
+  // Creare: in the horizontal bar the filters can be hidden ("Close") and are
+  // hidden after "Search", leaving the applied filters strip
+  const collapse = useFilterBarCollapse();
+  const canCollapse = !isVertical && !!collapse;
+  const handleApply = () => {
+    onApply();
+    if (canCollapse) {
+      collapse.setCollapsed(true);
+    }
+  };
+
+  const closeButton = canCollapse ? (
+    <Button
+      buttonStyle="tertiary"
+      className="filter-close-button"
+      onClick={() => collapse.setCollapsed(true)}
+      {...getFilterBarTestId('close-button')}
+    >
+      {t('Close')}
+    </Button>
+  ) : null;
+
+  const applyButton = (
+    <Button
+      disabled={isApplyDisabled}
+      buttonStyle="primary"
+      htmlType="submit"
+      className="filter-apply-button"
+      css={(theme: SupersetTheme) => applyButtonStyle(theme, isVertical)}
+      onClick={handleApply}
+      {...getFilterBarTestId('apply-button')}
+    >
+      {/* Creare: "Pesquisar" in the horizontal bar, as in the Design System */}
+      {isVertical ? t('Apply filters') : t('Search')}
+    </Button>
+  );
+
+  const clearAllButton = (
+    <Flex className="filter-clear-all-container">
+      <Button
+        disabled={!isClearAllEnabled}
+        // Creare: text button (the outlined one is "Close")
+        buttonStyle="link"
+        className="filter-clear-all-button"
+        css={(theme: SupersetTheme) => clearAllButtonStyle(theme)}
+        onClick={onClearAll}
+        {...getFilterBarTestId('clear-button')}
+      >
+        {t('Clear all')}
+      </Button>
+      {hasOutOfScopeRequiredFilters && (
+        <Tooltip
+          title={t(
+            'Some required filters on other tabs have values and will not be cleared',
+          )}
+        >
+          <Icons.InfoCircleOutlined
+            iconSize="s"
+            css={(theme: SupersetTheme) => css`
+              margin-left: ${theme.sizeUnit}px;
+            `}
+          />
+        </Tooltip>
+      )}
+    </Flex>
+  );
+
+  // Creare: stable class names (dropped in 6.1) so the dashboard CSS can style
+  // the buttons; the horizontal bar follows the platform order
+  // (Clear all -> Close -> Search)
   return (
     <ButtonsContainer
       isVertical={isVertical}
+      className="filter-bar-actions"
       data-test="filterbar-action-buttons"
     >
-      <Button
-        disabled={isApplyDisabled}
-        buttonStyle="primary"
-        htmlType="submit"
-        css={(theme: SupersetTheme) => applyButtonStyle(theme, isVertical)}
-        onClick={onApply}
-        {...getFilterBarTestId('apply-button')}
-      >
-        {isVertical ? t('Apply filters') : t('Apply')}
-      </Button>
-      <Flex>
-        <Button
-          disabled={!isClearAllEnabled}
-          buttonStyle="link"
-          css={(theme: SupersetTheme) => clearAllButtonStyle(theme, isVertical)}
-          onClick={onClearAll}
-          {...getFilterBarTestId('clear-button')}
-        >
-          {t('Clear all')}
-        </Button>
-        {hasOutOfScopeRequiredFilters && (
-          <Tooltip
-            title={t(
-              'Some required filters on other tabs have values and will not be cleared',
-            )}
-          >
-            <Icons.InfoCircleOutlined
-              iconSize="s"
-              css={(theme: SupersetTheme) => css`
-                margin-left: ${theme.sizeUnit}px;
-              `}
-            />
-          </Tooltip>
-        )}
-      </Flex>
+      {isVertical ? applyButton : clearAllButton}
+      {closeButton}
+      {isVertical ? clearAllButton : applyButton}
     </ButtonsContainer>
   );
 };

@@ -490,6 +490,30 @@ const getPageSize = (
 
 const defaultServerPaginationData = {};
 const defaultColorFormatters = [] as ColorFormatters;
+
+// Creare: last value computed for each chart, with the inputs it came from
+const stableValues = new Map<string, { inputs: unknown[]; value: unknown }>();
+
+/**
+ * Creare: returns the value computed before for this chart while its inputs
+ * are the same objects. `formData` below is a deep copy made on every call, so
+ * the values derived from it were new objects even when only the chart size
+ * changed (e.g. fitted to the viewport when the filter bar opens/closes); the
+ * table then rebuilt its columns and re-mounted every cell.
+ */
+function stableValue<T>(key: string, inputs: unknown[], compute: () => T): T {
+  const cached = stableValues.get(key);
+  if (
+    cached &&
+    cached.inputs.length === inputs.length &&
+    cached.inputs.every((input, index) => input === inputs[index])
+  ) {
+    return cached.value as T;
+  }
+  const value = compute();
+  stableValues.set(key, { inputs, value });
+  return value;
+}
 const transformProps = (
   chartProps: TableChartProps,
 ): TableChartTransformedProps => {
@@ -539,15 +563,26 @@ const transformProps = (
   // When a user creates an adhoc column with a custom label (e.g. sqlExpression: "state",
   // label: "State_Renamed"), the query result uses the label as the column name.
   // Cross-filtering needs the original column name to work on the receiving chart.
-  const columnLabelToNameMap: Record<string, string> = {};
-  const formColumns = ensureIsArray(
-    queryMode === QueryMode.Raw ? formData.all_columns : formData.groupby,
+  const columnLabelToNameMap = stableValue(
+    `${slice_id}:columnLabelToNameMap`,
+    [originalFormData],
+    () => {
+      const labelToName: Record<string, string> = {};
+      const formColumns = ensureIsArray(
+        queryMode === QueryMode.Raw ? formData.all_columns : formData.groupby,
+      );
+      formColumns.forEach(col => {
+        if (
+          isAdhocColumn(col) &&
+          col.label &&
+          col.label !== col.sqlExpression
+        ) {
+          labelToName[col.label] = col.sqlExpression;
+        }
+      });
+      return labelToName;
+    },
   );
-  formColumns.forEach(col => {
-    if (isAdhocColumn(col) && col.label && col.label !== col.sqlExpression) {
-      columnLabelToNameMap[col.label] = col.sqlExpression;
-    }
-  });
 
   const isUsingTimeComparison =
     !isEmpty(time_compare) &&
@@ -732,16 +767,31 @@ const transformProps = (
   const passedData = isUsingTimeComparison ? comparisonData || [] : data;
   const passedColumns = isUsingTimeComparison ? comparisonColumns : columns;
 
+  // Creare: the same objects while only the chart size changes (see
+  // stableValue)
+  const formattersInputs = [originalFormData, baseQuery?.data, columns, theme];
   const basicColorFormatters =
-    comparisonColorEnabled && getBasicColorFormatter(baseQuery?.data, columns);
-  const columnColorFormatters =
-    getColorFormatters(conditionalFormatting, passedData, theme) ??
-    defaultColorFormatters;
+    comparisonColorEnabled &&
+    stableValue(`${slice_id}:basicColorFormatters`, formattersInputs, () =>
+      getBasicColorFormatter(baseQuery?.data, columns),
+    );
+  const columnColorFormatters = stableValue(
+    `${slice_id}:columnColorFormatters`,
+    [...formattersInputs, passedData],
+    () =>
+      getColorFormatters(conditionalFormatting, passedData, theme) ??
+      defaultColorFormatters,
+  );
 
-  const basicColorColumnFormatters = getBasicColorFormatterForColumn(
-    baseQuery?.data,
-    columns,
-    conditionalFormatting,
+  const basicColorColumnFormatters = stableValue(
+    `${slice_id}:basicColorColumnFormatters`,
+    formattersInputs,
+    () =>
+      getBasicColorFormatterForColumn(
+        baseQuery?.data,
+        columns,
+        conditionalFormatting,
+      ),
   );
 
   // Get cached values for this slice
@@ -788,6 +838,8 @@ const transformProps = (
     sortDesc,
     includeSearch,
     rowCount,
+    // Creare: to warn that the total of results may be limited
+    rowLimit: Number(formData.row_limit) || 0,
     pageSize: serverPagination
       ? serverPaginationData?.pageSize
         ? serverPaginationData?.pageSize

@@ -18,6 +18,7 @@
  */
 import { NativeFilterType } from '@superset-ui/core';
 import { render, screen, waitFor } from 'spec/helpers/testing-library';
+import { FilterBarCollapseContext } from './FilterBarCollapse';
 import HorizontalBar from './Horizontal';
 
 const defaultProps = {
@@ -90,4 +91,28 @@ test('should render the loading icon', async () => {
     isInitialized: false,
   });
   expect(screen.getByRole('status', { name: 'Loading' })).toBeInTheDocument();
+});
+
+test('the hidden filter bar stays mounted, collapsed', async () => {
+  await waitFor(() =>
+    render(
+      <FilterBarCollapseContext.Provider
+        value={{ collapsed: true, setCollapsed: jest.fn() }}
+      >
+        <HorizontalBar {...defaultProps} />
+      </FilterBarCollapseContext.Provider>,
+      {
+        useRedux: true,
+        initialState: {
+          dashboardState: { sliceIds: [] },
+          dashboardInfo: { dash_edit_perm: true },
+          dashboardLayout: { present: {}, past: [], future: [] },
+        },
+      },
+    ),
+  );
+  const bar = screen.getByTestId('filter-bar');
+  expect(bar).toBeInTheDocument();
+  expect(bar.parentElement).toHaveAttribute('aria-hidden', 'true');
+  expect(bar.parentElement).not.toHaveClass('filter-bar-collapse--open');
 });

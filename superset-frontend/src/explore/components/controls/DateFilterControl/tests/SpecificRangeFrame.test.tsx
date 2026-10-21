@@ -27,7 +27,8 @@ const mockStore = configureStore([thunk]);
 test.each([
   ['pt_BR', '16/03/2021 00:00', '17/03/2021 00:00'],
   ['es', '16/03/2021 00:00', '17/03/2021 00:00'],
-  ['en', '2021-03-16 00:00', '2021-03-17 00:00'],
+  ['en', '03/16/2021 00:00', '03/17/2021 00:00'],
+  ['fr', '2021-03-16 00:00', '2021-03-17 00:00'],
 ])(
   'shows the dates in the %s format, without seconds',
   async (locale, since, until) => {

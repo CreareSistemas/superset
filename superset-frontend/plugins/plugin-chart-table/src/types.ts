@@ -86,6 +86,8 @@ export interface TableChartTransformedProps<D extends DataRecord = DataRecord> {
   height: number;
   width: number;
   rowCount?: number;
+  /** Creare: row limit of the query (0 when there is none) */
+  rowLimit?: number;
   serverPagination: boolean;
   serverPaginationData: ServerPaginationData;
   setDataMask: SetDataMaskHook;

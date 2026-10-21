@@ -17,6 +17,8 @@
  * under the License.
  */
 import { render, screen, userEvent } from 'spec/helpers/testing-library';
+import { FilterBarOrientation } from 'src/dashboard/types';
+import { FilterBarCollapseContext } from '../FilterBarCollapse';
 import ActionButtons from './index';
 
 const createProps = () => ({
@@ -74,4 +76,61 @@ test('should apply', () => {
   expect(mockedProps.onApply).not.toHaveBeenCalled();
   userEvent.click(applyBtn);
   expect(mockedProps.onApply).toHaveBeenCalled();
+});
+
+test('horizontal bar shows "Clear all" before "Search", with stable class names', () => {
+  render(
+    <ActionButtons
+      {...createProps()}
+      filterBarOrientation={FilterBarOrientation.Horizontal}
+    />,
+    { useRedux: true },
+  );
+  const container = screen.getByTestId('filterbar-action-buttons');
+  const clearAll = screen.getByText('Clear all').closest('button');
+  const search = screen.getByText('Search').closest('button');
+
+  expect(container).toHaveClass('filter-bar-actions');
+  expect(clearAll).toHaveClass('filter-clear-all-button');
+  expect(search).toHaveClass('filter-apply-button');
+  expect(
+    clearAll!.compareDocumentPosition(search!) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
+test('horizontal bar "Close" and "Search" hide the filters', () => {
+  const setCollapsed = jest.fn();
+  const props = createProps();
+  render(
+    <FilterBarCollapseContext.Provider
+      value={{ collapsed: false, setCollapsed }}
+    >
+      <ActionButtons
+        {...props}
+        filterBarOrientation={FilterBarOrientation.Horizontal}
+      />
+    </FilterBarCollapseContext.Provider>,
+    { useRedux: true },
+  );
+
+  userEvent.click(screen.getByText('Close'));
+  expect(setCollapsed).toHaveBeenLastCalledWith(true);
+
+  setCollapsed.mockClear();
+  userEvent.click(screen.getByText('Search'));
+  expect(props.onApply).toHaveBeenCalled();
+  expect(setCollapsed).toHaveBeenLastCalledWith(true);
+});
+
+test('vertical bar has no "Close" button', () => {
+  render(
+    <FilterBarCollapseContext.Provider
+      value={{ collapsed: false, setCollapsed: jest.fn() }}
+    >
+      <ActionButtons {...createProps()} />
+    </FilterBarCollapseContext.Provider>,
+    { useRedux: true },
+  );
+  expect(screen.queryByText('Close')).not.toBeInTheDocument();
 });

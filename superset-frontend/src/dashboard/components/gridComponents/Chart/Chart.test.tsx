@@ -159,6 +159,13 @@ test('should render a description if it has one and isExpanded=true', () => {
   expect(container.querySelector('.slice_description')).toBeInTheDocument();
 });
 
+test('should call refreshChart when SliceHeader calls forceRefresh', () => {
+  const { getByText, getByRole } = setup({});
+  fireEvent.click(getByRole('button', { name: 'More Options' }));
+  fireEvent.click(getByText('Force refresh'));
+  expect(refreshChart).toHaveBeenCalled();
+});
+
 /* oxlint-disable-next-line jest/no-disabled-tests */
 test.skip('should call changeFilter when ChartContainer calls changeFilter', () => {
   const mockChangeFilter = jest.fn();
@@ -178,7 +185,7 @@ test('should call exportChart when exportCSV is clicked', async () => {
     },
   );
   fireEvent.click(getByRole('button', { name: 'More Options' }));
-  const exportAction = await findByText('Download as .CSV');
+  const exportAction = await findByText('Export to .CSV');
   fireEvent.click(exportAction);
   expect(stubbedExportCSV).toHaveBeenCalledTimes(1);
   expect(stubbedExportCSV).toHaveBeenCalledWith(
@@ -234,7 +241,7 @@ test('should call exportChart when exportXLSX is clicked', async () => {
     },
   );
   fireEvent.click(getByRole('button', { name: 'More Options' }));
-  const exportAction = await findByText('Download as .XLSX');
+  const exportAction = await findByText('Export to Excel');
   fireEvent.click(exportAction);
   expect(stubbedExportXLSX).toHaveBeenCalledTimes(1);
   expect(stubbedExportXLSX).toHaveBeenCalledWith(

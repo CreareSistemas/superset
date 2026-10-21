@@ -17,6 +17,7 @@
  * under the License.
  */
 import { ReactNode, useState, useEffect, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { t } from '@apache-superset/core/translation';
 import {
   NO_TIME_RANGE,
@@ -46,6 +47,7 @@ import { DateFilterControlProps, FrameType } from './types';
 import {
   DateFilterTestKey,
   FRAME_OPTIONS,
+  formatTimeRangeForDisplay,
   guessFrame,
   useDefaultTimeFilter,
 } from './utils';
@@ -152,6 +154,9 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
     placeholder,
   } = props;
   const defaultTimeFilter = useDefaultTimeFilter();
+  const locale = useSelector(
+    (state: { common?: { locale?: string } }) => state?.common?.locale,
+  );
 
   const value = props.value ?? defaultTimeFilter;
   const [actualTimeRange, setActualTimeRange] = useState<string>(value);
@@ -201,6 +206,11 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
           setTooltipTitle(
             getTooltipTitle(labelIsTruncated, value, actualRange),
           );
+        } else if (specificRangeOnly) {
+          // Creare: readable dates instead of "2026-10-02 ≤ col < 2026-10-09"
+          setActualTimeRange(
+            formatTimeRangeForDisplay(value, locale) ?? (actualRange || ''),
+          );
         } else {
           setActualTimeRange(actualRange || '');
           setTooltipTitle(
@@ -212,7 +222,14 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
       setLastFetchedTimeRange(value);
       setEvalResponse(actualRange || value);
     });
-  }, [guessedFrame, labelIsTruncated, labelRef, value]);
+  }, [
+    guessedFrame,
+    labelIsTruncated,
+    labelRef,
+    value,
+    specificRangeOnly,
+    locale,
+  ]);
 
   useDebouncedEffect(
     () => {

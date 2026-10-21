@@ -17,7 +17,14 @@
  * under the License.
  */
 /* eslint-disable no-param-reassign */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { t } from '@apache-superset/core/translation';
 import {
   AppSection,
@@ -34,6 +41,7 @@ import { GenericDataType } from '@apache-superset/core/common';
 import { debounce, isUndefined } from 'lodash';
 import { useImmerReducer } from 'use-immer';
 import {
+  Checkbox,
   FormItem,
   LabeledValue,
   Select,
@@ -335,6 +343,38 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
     [formData.sortAscending, formData.sortMetric],
   );
 
+  // Creare: multi-select options show a checkbox (Design System option list),
+  // so it is clear which values are selected
+  const selectedValues = useMemo(
+    () => new Set(ensureIsArray(filterState.value)),
+    [filterState.value],
+  );
+
+  const multiSelectOptionProps = useMemo(
+    () =>
+      multiSelect
+        ? {
+            optionRender: (option: { label?: ReactNode; value?: unknown }) => (
+              <Space className="native-filter-option">
+                <Checkbox
+                  checked={selectedValues.has(option.value)}
+                  tabIndex={-1}
+                  aria-hidden
+                  css={{ pointerEvents: 'none' }}
+                />
+                {option.label || option.value}
+              </Space>
+            ),
+            // the checkbox replaces the trailing check mark; the "stop" mark
+            // of excluded values stays
+            ...(!(inverseSelection && excludeFilterValues) && {
+              menuItemSelectedIcon: null,
+            }),
+          }
+        : {},
+    [multiSelect, selectedValues, inverseSelection, excludeFilterValues],
+  );
+
   // Use effect for initialisation for filter plugin
   // this should run only once when filter is configured & saved
   // & shouldnt run when the component is remounted on change of
@@ -542,6 +582,7 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
             sortComparator={sortComparator}
             onOpenChange={setFilterActive}
             className="select-container"
+            {...multiSelectOptionProps}
           />
         </StyledSpace>
       </FormItem>

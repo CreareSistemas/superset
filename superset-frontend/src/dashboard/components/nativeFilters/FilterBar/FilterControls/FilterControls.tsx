@@ -76,6 +76,7 @@ import { useFilterOutlined } from '../useFilterOutlined';
 import { useChartsVerboseMaps } from '../utils';
 import FilterControl from './FilterControl';
 import FilterDivider from './FilterDivider';
+import { MoreFiltersTrigger } from './MoreFiltersTrigger';
 
 function addDataMaskToCustomization(
   customization: ChartCustomization,
@@ -585,18 +586,18 @@ const FilterControls: FC<FilterControlsProps> = ({
       >
         <DropdownContainer
           items={items}
-          dropdownTriggerIcon={
-            <Icons.FilterOutlined
-              css={css`
-                && {
-                  margin-right: -4px;
-                  display: flex;
-                }
-              `}
-            />
-          }
-          dropdownTriggerText={t('More filters')}
           dropdownTriggerCount={activeOverflowedFiltersInScope.length}
+          // Creare: Design System icon button with a dot instead of the
+          // "More filters" text and count badge
+          renderDropdownTrigger={({ count, open }) => (
+            <MoreFiltersTrigger hasActiveFilters={count > 0 && !open} />
+          )}
+          dropdownTriggerClassName={
+            activeOverflowedFiltersInScope.length > 0
+              ? 'more-filters-trigger more-filters-trigger--active'
+              : 'more-filters-trigger'
+          }
+          dropdownPopoverClassName="more-filters-popover"
           dropdownTriggerTooltip={
             activeOverflowedFiltersInScope.length === 0
               ? t('No applied filters')
