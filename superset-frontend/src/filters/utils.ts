@@ -24,11 +24,33 @@ import {
   ExtraFormData,
 } from '@superset-ui/core';
 import { GenericDataType } from '@apache-superset/core/common';
+import { t } from '@apache-superset/core/translation';
 import { FALSE_STRING, NULL_STRING, TRUE_STRING } from 'src/utils/common';
 import {
   Clauses,
   ExpressionTypes,
 } from '../explore/components/controls/FilterControl/types';
+
+/**
+ * Creare: action placeholder for an empty native filter, e.g. "Select the
+ * period" or "Selecione o(s) veículo(s)". A translation for the key
+ * "<filter name>_placeholder" (superset-custom) overrides it per filter.
+ * Returns `defaultPlaceholder` when the filter name is unknown.
+ */
+export const getFilterPlaceholder = (
+  filterName?: string,
+  defaultPlaceholder?: string,
+): string | undefined => {
+  if (!filterName) {
+    return defaultPlaceholder;
+  }
+  const overrideKey = `${filterName}_placeholder`;
+  const override = t(overrideKey);
+  if (override !== overrideKey) {
+    return override;
+  }
+  return defaultPlaceholder ?? t('Select %s', t(filterName).toLowerCase());
+};
 
 export const getSelectExtraFormData = (
   col: string,

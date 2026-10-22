@@ -97,6 +97,8 @@ interface ChartProps {
   isInView?: boolean;
   cacheBusterProp?: string | number;
   chartHolderRef?: RefObject<HTMLDivElement>;
+  /** Creare: apply height changes right away (chart fitted to the viewport) */
+  resizeHeightImmediately?: boolean;
 }
 
 const RESIZE_TIMEOUT = 500;
@@ -357,17 +359,22 @@ const Chart = (props: ChartProps) => {
         ?.queried_dttm as string | null) ?? null)
     : null;
 
+  // Creare: when fitted to the viewport the height follows the holder on every
+  // frame (filters collapsing, window resize) instead of jumping after the
+  // resize debounce
+  const currentHeight = props.resizeHeightImmediately ? props.height : height;
+
   const getChartHeight = useCallback((): number => {
     const headerHeight = getHeaderHeight();
     const queriedLabelHeight =
       showChartTimestamps && queriedDttm != null ? QUERIED_LABEL_HEIGHT : 0;
     return Math.max(
-      height - headerHeight - descriptionHeight - queriedLabelHeight,
+      currentHeight - headerHeight - descriptionHeight - queriedLabelHeight,
       20,
     );
   }, [
     getHeaderHeight,
-    height,
+    currentHeight,
     descriptionHeight,
     queriedDttm,
     showChartTimestamps,
@@ -813,6 +820,7 @@ export default memo(Chart, (prevProps: ChartProps, nextProps: ChartProps) => {
       prevProps.sliceName === nextProps.sliceName &&
       prevProps.updateSliceName === nextProps.updateSliceName &&
       prevProps.width === nextProps.width &&
-      prevProps.height === nextProps.height)
+      prevProps.height === nextProps.height &&
+      prevProps.resizeHeightImmediately === nextProps.resizeHeightImmediately)
   );
 });

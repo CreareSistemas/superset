@@ -16,7 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { memo, useContext, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
+import { noop } from 'lodash';
 import {
   createHtmlPortalNode,
   InPortal,
@@ -27,10 +28,7 @@ import { isChartCustomization } from '@superset-ui/core';
 import { t } from '@apache-superset/core/translation';
 import { checkIsMissingRequiredValue } from '../utils';
 import FilterValue from './FilterValue';
-import { FilterCard } from '../../FilterCard';
-import { FilterBarScrollContext } from '../Vertical';
 import { FilterControlProps } from './types';
-import { FilterCardPlacement } from '../../FilterCard/types';
 import { useIsFilterInScope } from '../../state';
 import {
   FilterStyledIcon,
@@ -54,7 +52,6 @@ const FilterControl = ({
   onClearAllComplete,
 }: FilterControlProps) => {
   const portalNode = useMemo(() => createHtmlPortalNode(), []);
-  const [isFilterActive, setIsFilterActive] = useState(false);
 
   const { name = '<undefined>' } = filter;
 
@@ -99,17 +96,6 @@ const FilterControl = ({
     ],
   );
 
-  const isScrolling = useContext(FilterBarScrollContext);
-  const filterCardPlacement = useMemo(() => {
-    if (orientation === FilterBarOrientation.Horizontal) {
-      if (overflow) {
-        return FilterCardPlacement.Left;
-      }
-      return FilterCardPlacement.Bottom;
-    }
-    return FilterCardPlacement.Right;
-  }, [orientation, overflow]);
-
   if (
     isChartCustomization(filter) &&
     filter.filterType === 'chart_customization_dynamic_groupby'
@@ -138,7 +124,7 @@ const FilterControl = ({
           onFilterSelectionChange={onFilterSelectionChange}
           inView={inView}
           parentRef={parentRef}
-          setFilterActive={setIsFilterActive}
+          setFilterActive={noop}
           orientation={orientation}
           overflow={overflow}
           validateStatus={validateStatus}
@@ -153,22 +139,18 @@ const FilterControl = ({
             : 'vertical'
         }
       >
-        <FilterCard
-          filter={filter}
-          isVisible={!isFilterActive && !isScrolling}
-          placement={filterCardPlacement}
-        >
-          <div>
-            <FormItem
-              label={label}
-              htmlFor={filter.id}
-              required={filter?.controlValues?.enableEmptyFilter}
-              validateStatus={validateStatus}
-            >
-              <OutPortal node={portalNode} />
-            </FormItem>
-          </div>
-        </FilterCard>
+        {/* Creare: no FilterCard popover (name/type/scope) on hover, it only
+            confused report users */}
+        <div>
+          <FormItem
+            label={label}
+            htmlFor={filter.id}
+            required={filter?.controlValues?.enableEmptyFilter}
+            validateStatus={validateStatus}
+          >
+            <OutPortal node={portalNode} />
+          </FormItem>
+        </div>
       </FilterControlContainer>
     </>
   );

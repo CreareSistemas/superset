@@ -18,8 +18,10 @@
  */
 import { NO_TIME_RANGE, getExtensionsRegistry } from '@superset-ui/core';
 import { styled } from '@apache-superset/core/theme';
+import { t } from '@apache-superset/core/translation';
 import { useCallback, useEffect } from 'react';
 import DateFilterControl from 'src/explore/components/controls/DateFilterControl';
+import { getFilterPlaceholder } from '../../utils';
 import { PluginFilterTimeProps } from './types';
 import { FilterPluginStyle } from '../common';
 
@@ -131,6 +133,11 @@ export default function TimeFilterPlugin(props: PluginFilterTimeProps) {
             unsetFocusedFilter();
           }}
           isOverflowingFilterBar={isOverflowingFilterBar}
+          specificRangeOnly
+          placeholder={getFilterPlaceholder(
+            props.formData?.nativeFilterName,
+            t('Select the period'),
+          )}
         />
       </ControlContainer>
     </TimeFilterStyles>

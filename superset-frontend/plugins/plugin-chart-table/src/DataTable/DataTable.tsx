@@ -92,6 +92,8 @@ export interface DataTableProps<D extends object> extends TableOptions<D> {
   searchOptions: SearchOption[];
   onFilteredDataChange?: (rows: Row<D>[], filterValue?: string) => void;
   onFilteredRowsChange?: (rows: D[]) => void;
+  /** Creare: shown on the left of the pagination row (total of results) */
+  footerInfo?: ReactNode;
 }
 
 export interface RenderHTMLCellProps extends HTMLProps<HTMLTableCellElement> {
@@ -136,6 +138,7 @@ export default typedMemo(function DataTable<D extends object>({
   searchOptions,
   onFilteredDataChange,
   onFilteredRowsChange,
+  footerInfo,
   ...moreUseTableOptions
 }: DataTableProps<D>): JSX.Element {
   const tableHooks: PluginHook<D>[] = [
@@ -209,6 +212,8 @@ export default typedMemo(function DataTable<D extends object>({
     paginationRef,
     resultsSize,
     paginationData,
+    // Creare: the pagination row also shows up for the footer info
+    !!footerInfo,
   ]);
 
   const defaultGlobalFilter: FilterType<D> = useCallback(
@@ -613,7 +618,7 @@ export default typedMemo(function DataTable<D extends object>({
         </div>
       ) : null}
       {wrapStickyTable ? wrapStickyTable(renderTable) : renderTable()}
-      {hasPagination && resultPageCount > 1 ? (
+      {(hasPagination && resultPageCount > 1) || footerInfo ? (
         <SimplePagination
           ref={paginationRef}
           style={paginationStyle}
@@ -621,6 +626,8 @@ export default typedMemo(function DataTable<D extends object>({
           pageCount={resultPageCount}
           currentPage={resultCurrentPage}
           onPageChange={resultOnPageChange}
+          info={footerInfo}
+          showPages={hasPagination && resultPageCount > 1}
         />
       ) : null}
     </div>

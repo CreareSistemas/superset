@@ -125,6 +125,27 @@ describe('SelectFilterPlugin', () => {
     jest.clearAllMocks();
   });
 
+  test('multi-select options show a checkbox with the selected state', async () => {
+    getWrapper();
+    userEvent.click(screen.getAllByRole('combobox')[0]);
+    await screen.findByTitle('girl');
+
+    const getOption = (title: string) =>
+      screen
+        .getAllByTitle(title)
+        .find(el => el.classList.contains('ant-select-item-option'));
+
+    expect(
+      getOption('boy')?.querySelector('.ant-checkbox-checked'),
+    ).toBeInTheDocument();
+    expect(
+      getOption('girl')?.querySelector('.ant-checkbox'),
+    ).toBeInTheDocument();
+    expect(
+      getOption('girl')?.querySelector('.ant-checkbox-checked'),
+    ).not.toBeInTheDocument();
+  });
+
   test('Add multiple values with first render', async () => {
     getWrapper();
     expect(setDataMask).toHaveBeenCalledWith({
@@ -384,6 +405,38 @@ describe('SelectFilterPlugin', () => {
     userEvent.type(screen.getByRole('combobox'), 'new value');
     expect(await screen.findByTitle('new value')).toBeInTheDocument();
   });
+
+  test.each([
+    ['Gender', 'Select gender'],
+    [undefined, '3 options'],
+  ])(
+    'empty filter named %s shows the placeholder "%s"',
+    (nativeFilterName, placeholder) => {
+      render(
+        // @ts-expect-error
+        <SelectFilterPlugin
+          // @ts-expect-error
+          {...transformProps({
+            ...selectMultipleProps,
+            formData: {
+              ...selectMultipleProps.formData,
+              defaultValue: undefined,
+              nativeFilterName,
+            },
+            filterState: {},
+          })}
+          setDataMask={setDataMask}
+          showOverflow={false}
+        />,
+        {
+          useRedux: true,
+          initialState: { nativeFilters: { filters: {} }, dataMask: {} },
+        },
+      );
+
+      expect(screen.getByText(placeholder)).toBeInTheDocument();
+    },
+  );
 
   test('preserves backend order when sortMetric is specified', () => {
     const testData = [

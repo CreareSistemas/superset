@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { CSSProperties, forwardRef, memo, Ref } from 'react';
+import { CSSProperties, forwardRef, memo, ReactNode, Ref } from 'react';
 
 export interface PaginationProps {
   pageCount: number; // number of pages
@@ -25,6 +25,10 @@ export interface PaginationProps {
   ellipsis?: string; // content for ellipsis item
   onPageChange: (page: number) => void; // `page` is zero-based
   style?: CSSProperties;
+  /** Creare: shown on the left of the pages (e.g. the total of results) */
+  info?: ReactNode;
+  /** Creare: false renders only the info (a single page) */
+  showPages?: boolean;
 }
 
 // first, ..., prev, current, next, ..., last
@@ -80,42 +84,51 @@ export default memo(
       currentPage = 0,
       maxPageItemCount = 9,
       onPageChange,
+      info,
+      showPages = true,
     }: PaginationProps,
     ref: Ref<HTMLDivElement>,
   ) {
-    const pageItems = generatePageItems(
-      pageCount,
-      currentPage,
-      maxPageItemCount,
-    );
+    const pageItems = showPages
+      ? generatePageItems(pageCount, currentPage, maxPageItemCount)
+      : [];
     return (
-      <div ref={ref} className="dt-pagination" style={style}>
-        <ul className="pagination pagination-sm">
-          {pageItems.map(item =>
-            typeof item === 'number' ? (
-              // actual page number
-              <li
-                key={item}
-                className={currentPage === item ? 'active' : undefined}
-              >
-                <a
-                  href={`#page-${item}`}
-                  role="button"
-                  onClick={e => {
-                    e.preventDefault();
-                    onPageChange(item);
-                  }}
+      <div
+        ref={ref}
+        className={
+          info ? 'dt-pagination dt-pagination--with-info' : 'dt-pagination'
+        }
+        style={style}
+      >
+        {info && <div className="dt-pagination-info">{info}</div>}
+        {showPages && (
+          <ul className="pagination pagination-sm">
+            {pageItems.map(item =>
+              typeof item === 'number' ? (
+                // actual page number
+                <li
+                  key={item}
+                  className={currentPage === item ? 'active' : undefined}
                 >
-                  {item + 1}
-                </a>
-              </li>
-            ) : (
-              <li key={item} className="dt-pagination-ellipsis">
-                <span>…</span>
-              </li>
-            ),
-          )}
-        </ul>
+                  <a
+                    href={`#page-${item}`}
+                    role="button"
+                    onClick={e => {
+                      e.preventDefault();
+                      onPageChange(item);
+                    }}
+                  >
+                    {item + 1}
+                  </a>
+                </li>
+              ) : (
+                <li key={item} className="dt-pagination-ellipsis">
+                  <span>…</span>
+                </li>
+              ),
+            )}
+          </ul>
+        )}
       </div>
     );
   }),

@@ -17,7 +17,14 @@
  * under the License.
  */
 /* eslint-disable no-param-reassign */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { t } from '@apache-superset/core/translation';
 import {
   AppSection,
@@ -34,6 +41,7 @@ import { GenericDataType } from '@apache-superset/core/common';
 import { debounce, isUndefined } from 'lodash';
 import { useImmerReducer } from 'use-immer';
 import {
+  Checkbox,
   FormItem,
   LabeledValue,
   Select,
@@ -45,7 +53,11 @@ import {
   propertyComparator,
 } from '@superset-ui/core/components/Select/utils';
 import { FilterBarOrientation } from 'src/dashboard/types';
-import { getDataRecordFormatter, getSelectExtraFormData } from '../../utils';
+import {
+  getDataRecordFormatter,
+  getFilterPlaceholder,
+  getSelectExtraFormData,
+} from '../../utils';
 import { FilterPluginStyle, StatusMessage } from '../common';
 import { PluginFilterSelectProps, SelectValue } from './types';
 
@@ -279,7 +291,8 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
   const placeholderText =
     data.length === 0
       ? t('No data')
-      : tn('%s option', '%s options', data.length, data.length);
+      : (getFilterPlaceholder(formData.nativeFilterName) ??
+        tn('%s option', '%s options', data.length, data.length));
 
   const formItemExtra = useMemo(() => {
     if (filterState.validateMessage) {
@@ -328,6 +341,38 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
       return labelComparator(b, a);
     },
     [formData.sortAscending, formData.sortMetric],
+  );
+
+  // Creare: multi-select options show a checkbox (Design System option list),
+  // so it is clear which values are selected
+  const selectedValues = useMemo(
+    () => new Set(ensureIsArray(filterState.value)),
+    [filterState.value],
+  );
+
+  const multiSelectOptionProps = useMemo(
+    () =>
+      multiSelect
+        ? {
+            optionRender: (option: { label?: ReactNode; value?: unknown }) => (
+              <Space className="native-filter-option">
+                <Checkbox
+                  checked={selectedValues.has(option.value)}
+                  tabIndex={-1}
+                  aria-hidden
+                  css={{ pointerEvents: 'none' }}
+                />
+                {option.label || option.value}
+              </Space>
+            ),
+            // the checkbox replaces the trailing check mark; the "stop" mark
+            // of excluded values stays
+            ...(!(inverseSelection && excludeFilterValues) && {
+              menuItemSelectedIcon: null,
+            }),
+          }
+        : {},
+    [multiSelect, selectedValues, inverseSelection, excludeFilterValues],
   );
 
   // Use effect for initialisation for filter plugin
@@ -537,6 +582,7 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
             sortComparator={sortComparator}
             onOpenChange={setFilterActive}
             className="select-container"
+            {...multiSelectOptionProps}
           />
         </StyledSpace>
       </FormItem>

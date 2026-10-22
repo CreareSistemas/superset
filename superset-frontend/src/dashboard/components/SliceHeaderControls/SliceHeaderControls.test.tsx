@@ -180,7 +180,11 @@ test('Should render default props', () => {
   expect(screen.getByText('Force refresh')).toBeInTheDocument();
   expect(screen.getByText('Show chart description')).toBeInTheDocument();
   expect(screen.getByText('Edit chart')).toBeInTheDocument();
-  expect(screen.getByText('Download')).toBeInTheDocument();
+  // downloads are straight in the menu, without the "Download" submenu
+  expect(screen.queryByText('Download')).not.toBeInTheDocument();
+  expect(screen.getByText('Export to .CSV')).toBeInTheDocument();
+  expect(screen.getByText('Export to Excel')).toBeInTheDocument();
+  expect(screen.getByText('Download as image')).toBeInTheDocument();
   expect(screen.getByText('Share')).toBeInTheDocument();
 
   expect(
@@ -194,7 +198,6 @@ test('Should "export to CSV"', async () => {
   renderWrapper(props);
   openMenu();
   expect(props.exportCSV).toHaveBeenCalledTimes(0);
-  userEvent.hover(screen.getByText('Download'));
   userEvent.click(await screen.findByText('Export to .CSV'));
   expect(props.exportCSV).toHaveBeenCalledTimes(1);
   expect(props.exportCSV).toHaveBeenCalledWith(371);
@@ -205,7 +208,6 @@ test('Should "export to Excel"', async () => {
   renderWrapper(props);
   openMenu();
   expect(props.exportXLSX).toHaveBeenCalledTimes(0);
-  userEvent.hover(screen.getByText('Download'));
   userEvent.click(await screen.findByText('Export to Excel'));
   expect(props.exportXLSX).toHaveBeenCalledTimes(1);
   expect(props.exportXLSX).toHaveBeenCalledWith(371);
@@ -218,7 +220,6 @@ test('Export full CSV is under featureflag', async () => {
   const props = createProps(VizType.Table);
   renderWrapper(props);
   openMenu();
-  userEvent.hover(screen.getByText('Download'));
   expect(await screen.findByText('Export to .CSV')).toBeInTheDocument();
   expect(screen.queryByText('Export to full .CSV')).not.toBeInTheDocument();
 });
@@ -231,7 +232,6 @@ test('Should "export full CSV"', async () => {
   renderWrapper(props);
   openMenu();
   expect(props.exportFullCSV).toHaveBeenCalledTimes(0);
-  userEvent.hover(screen.getByText('Download'));
   userEvent.click(await screen.findByText('Export to full .CSV'));
   expect(props.exportFullCSV).toHaveBeenCalledTimes(1);
   expect(props.exportFullCSV).toHaveBeenCalledWith(371);
@@ -243,7 +243,6 @@ test('Should not show export full CSV if report is not table', async () => {
   };
   renderWrapper();
   openMenu();
-  userEvent.hover(screen.getByText('Download'));
   expect(await screen.findByText('Export to .CSV')).toBeInTheDocument();
   expect(screen.queryByText('Export to full .CSV')).not.toBeInTheDocument();
 });
@@ -255,7 +254,6 @@ test('Export full Excel is under featureflag', async () => {
   const props = createProps(VizType.Table);
   renderWrapper(props);
   openMenu();
-  userEvent.hover(screen.getByText('Download'));
   expect(await screen.findByText('Export to Excel')).toBeInTheDocument();
   expect(screen.queryByText('Export to full Excel')).not.toBeInTheDocument();
 });
@@ -268,7 +266,6 @@ test('Should "export full Excel"', async () => {
   renderWrapper(props);
   openMenu();
   expect(props.exportFullXLSX).toHaveBeenCalledTimes(0);
-  userEvent.hover(screen.getByText('Download'));
   userEvent.click(await screen.findByText('Export to full Excel'));
   expect(props.exportFullXLSX).toHaveBeenCalledTimes(1);
   expect(props.exportFullXLSX).toHaveBeenCalledWith(371);
@@ -280,7 +277,6 @@ test('Should not show export full Excel if report is not table', async () => {
   };
   renderWrapper();
   openMenu();
-  userEvent.hover(screen.getByText('Download'));
   expect(await screen.findByText('Export to Excel')).toBeInTheDocument();
   expect(screen.queryByText('Export to full Excel')).not.toBeInTheDocument();
 });
@@ -290,7 +286,6 @@ test('Should export to pivoted Excel if report is pivot table', async () => {
   renderWrapper(props);
   openMenu();
   expect(props.exportPivotExcel).toHaveBeenCalledTimes(0);
-  userEvent.hover(screen.getByText('Download'));
   userEvent.click(await screen.findByText('Export to Pivoted Excel'));
   expect(props.exportPivotExcel).toHaveBeenCalledTimes(1);
   expect(props.exportPivotExcel).toHaveBeenCalledWith(

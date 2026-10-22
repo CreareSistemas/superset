@@ -555,11 +555,10 @@ const SliceHeaderControls = (
   }
 
   if (props.supersetCanCSV) {
-    newMenuItems.push({
-      type: 'submenu',
-      key: MenuKeys.Download,
-      label: t('Download'),
-      children: [
+    // Creare: downloads go straight in the menu, without the "Download"
+    // submenu (unwanted items are hidden by the dashboard CSS)
+    newMenuItems.push(
+      ...[
         {
           key: MenuKeys.ExportCsv,
           label: t('Export to .CSV'),
@@ -606,7 +605,7 @@ const SliceHeaderControls = (
           icon: <Icons.FileImageOutlined css={dropdownIconsStyles} />,
         },
       ],
-    });
+    );
   }
 
   useEffect(() => {

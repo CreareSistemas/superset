@@ -85,6 +85,9 @@ export default function initPreamble(): Promise<void> {
         configure({ languagePack: json as LanguagePack });
         // Creare: o Superset usa pt_BR e o dayjs usa pt-br
         dayjs.locale(lang.toLowerCase().replace('_', '-'));
+        // Creare: idioma do documento (pt-BR), usado também para formatar
+        // números nos plugins (ex.: total de resultados da tabela)
+        document.documentElement.lang = lang.replace('_', '-');
       } catch (err) {
         logging.warn(
           'Failed to fetch language pack, falling back to default.',

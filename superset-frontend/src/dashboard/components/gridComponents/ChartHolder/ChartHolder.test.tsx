@@ -24,6 +24,7 @@ import mockState from 'spec/fixtures/mockState';
 import reducerIndex from 'spec/helpers/reducerIndex';
 import { sliceId as chartId } from 'spec/fixtures/mockChartQueries';
 import {
+  act,
   screen,
   render,
   waitFor,
@@ -34,13 +35,21 @@ import { nativeFiltersInfo } from 'src/dashboard/fixtures/mockNativeFilters';
 import newComponentFactory from 'src/dashboard/util/newComponentFactory';
 import { initialState } from 'src/SqlLab/fixtures';
 import { SET_DIRECT_PATH } from 'src/dashboard/actions/dashboardState';
+import { isEmbedded } from 'src/dashboard/util/isEmbedded';
+import { notifyDashboardHeaderTransition } from 'src/dashboard/util/headerTransition';
 import {
   CHART_TYPE,
   COLUMN_TYPE,
+  DASHBOARD_GRID_TYPE,
   ROW_TYPE,
 } from '../../../util/componentTypes';
+import isChartInLastRow from 'src/dashboard/util/isChartInLastRow';
 import ChartHolder, { CHART_MARGIN } from './ChartHolder';
 import { GRID_BASE_UNIT, GRID_GUTTER_SIZE } from '../../../util/constants';
+
+jest.mock('src/dashboard/util/isEmbedded', () => ({
+  isEmbedded: jest.fn(() => false),
+}));
 
 const DEFAULT_HEADER_HEIGHT = 22;
 
@@ -433,5 +442,141 @@ describe('ChartHolder', () => {
         .firstElementChild!,
     );
     expect(deleteComponent).toHaveBeenCalledTimes(1);
+  });
+
+  // Creare: the last row of the embedded dashboard fills the viewport
+  describe('fit to viewport', () => {
+    const layout: Record<string, any> = {
+      GRID_ID: {
+        ...newComponentFactory(DASHBOARD_GRID_TYPE),
+        id: 'GRID_ID',
+        parents: ['ROOT_ID'],
+        children: ['ROW_TOP', 'ROW_ID'],
+      },
+      ROW_TOP: {
+        ...newComponentFactory(ROW_TYPE),
+        id: 'ROW_TOP',
+        parents: ['ROOT_ID', 'GRID_ID'],
+        children: [],
+      },
+      ROW_ID: {
+        ...newComponentFactory(ROW_TYPE),
+        id: 'ROW_ID',
+        parents: ['ROOT_ID', 'GRID_ID'],
+        children: ['CHART-ID'],
+      },
+    };
+    const getComponentById = (id?: string) => (id ? layout[id] : undefined);
+    const holderTop = 100;
+    let offsetTopSpy: jest.SpyInstance;
+
+    const fitProps = {
+      fullSizeChartId: null,
+      parentComponent: layout.ROW_ID,
+      getComponentById,
+    };
+    const getChartHeight = () =>
+      parseInt(
+        screen.getByTestId('chart-container').getAttribute('height') || '0',
+        10,
+      );
+
+    beforeEach(() => {
+      (isEmbedded as jest.Mock).mockReturnValue(true);
+      // jsdom has no layout: the holder (without offsetParent) is at 100px
+      offsetTopSpy = jest
+        .spyOn(window.HTMLElement.prototype, 'offsetTop', 'get')
+        .mockReturnValue(holderTop);
+    });
+
+    afterEach(() => {
+      (isEmbedded as jest.Mock).mockReturnValue(false);
+      offsetTopSpy.mockRestore();
+    });
+
+    test('should fill the rest of the viewport in the last row', async () => {
+      renderWrapper(createMockStore(), fitProps);
+      // the holder padding (CHART_MARGIN by default, may be overridden by the
+      // dashboard CSS) and ancestors paddings/margins are measured
+      const maxHeight = window.innerHeight - holderTop - DEFAULT_HEADER_HEIGHT;
+
+      await waitFor(
+        () => {
+          expect(getChartHeight()).toBeLessThanOrEqual(maxHeight);
+          expect(getChartHeight()).toBeGreaterThan(
+            maxHeight - CHART_MARGIN - GRID_BASE_UNIT,
+          );
+          expect(getChartHeight()).toBeGreaterThan(
+            10 * GRID_BASE_UNIT - CHART_MARGIN - DEFAULT_HEADER_HEIGHT,
+          );
+        },
+        { timeout: 2000 },
+      );
+    });
+
+    test('should resize once to the final size when the header animates', async () => {
+      renderWrapper(createMockStore(), fitProps);
+      const gridHeight =
+        10 * GRID_BASE_UNIT - CHART_MARGIN - DEFAULT_HEADER_HEIGHT;
+      await waitFor(() => expect(getChartHeight()).toBeGreaterThan(gridHeight));
+      const fittedHeight = getChartHeight();
+
+      // the filter bar is about to grow 50px: the chart shrinks right away
+      act(() => {
+        notifyDashboardHeaderTransition({ delta: 50, duration: 350 });
+      });
+      expect(getChartHeight()).toEqual(fittedHeight - 50);
+    });
+
+    test('should keep the grid height when not in the last row', async () => {
+      renderWrapper(createMockStore(), {
+        ...fitProps,
+        parentComponent: layout.ROW_TOP,
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 700));
+      expect(getChartHeight()).toEqual(
+        10 * GRID_BASE_UNIT - CHART_MARGIN - DEFAULT_HEADER_HEIGHT,
+      );
+    });
+
+    test('should keep the grid height in edit mode', async () => {
+      renderWrapper(createMockStore(), { ...fitProps, editMode: true });
+
+      await new Promise(resolve => setTimeout(resolve, 700));
+      expect(getChartHeight()).toEqual(
+        10 * GRID_BASE_UNIT - CHART_MARGIN - DEFAULT_HEADER_HEIGHT,
+      );
+    });
+
+    test('isChartInLastRow handles rows and columns', () => {
+      const chart = { ...defaultProps.component, id: 'CHART-ID' } as any;
+      const column = {
+        ...newComponentFactory(COLUMN_TYPE),
+        id: 'COLUMN_ID',
+        parents: ['ROOT_ID', 'GRID_ID', 'ROW_ID'],
+        children: ['CHART-OTHER', 'CHART-ID'],
+      };
+
+      expect(isChartInLastRow(chart, layout.ROW_ID, getComponentById)).toBe(
+        true,
+      );
+      expect(isChartInLastRow(chart, layout.ROW_TOP, getComponentById)).toBe(
+        false,
+      );
+      expect(isChartInLastRow(chart, column as any, getComponentById)).toBe(
+        true,
+      );
+      expect(
+        isChartInLastRow(
+          chart,
+          { ...column, children: ['CHART-ID', 'CHART-OTHER'] } as any,
+          getComponentById,
+        ),
+      ).toBe(false);
+      expect(isChartInLastRow(chart, layout.ROW_ID, () => undefined)).toBe(
+        false,
+      );
+    });
   });
 });

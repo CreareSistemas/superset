@@ -17,6 +17,7 @@
  * under the License.
  */
 import { ReactNode, useState, useEffect, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { t } from '@apache-superset/core/translation';
 import {
   NO_TIME_RANGE,
@@ -46,6 +47,7 @@ import { DateFilterControlProps, FrameType } from './types';
 import {
   DateFilterTestKey,
   FRAME_OPTIONS,
+  formatTimeRangeForDisplay,
   guessFrame,
   useDefaultTimeFilter,
 } from './utils';
@@ -55,6 +57,7 @@ import {
   CustomFrame,
   AdvancedFrame,
   DateLabel,
+  SpecificRangeFrame,
 } from './components';
 import { CurrentCalendarFrame } from './components/CurrentCalendarFrame';
 
@@ -147,8 +150,13 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
     onOpenPopover = noOp,
     onClosePopover = noOp,
     isOverflowingFilterBar = false,
+    specificRangeOnly = false,
+    placeholder,
   } = props;
   const defaultTimeFilter = useDefaultTimeFilter();
+  const locale = useSelector(
+    (state: { common?: { locale?: string } }) => state?.common?.locale,
+  );
 
   const value = props.value ?? defaultTimeFilter;
   const [actualTimeRange, setActualTimeRange] = useState<string>(value);
@@ -198,6 +206,11 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
           setTooltipTitle(
             getTooltipTitle(labelIsTruncated, value, actualRange),
           );
+        } else if (specificRangeOnly) {
+          // Creare: readable dates instead of "2026-10-02 ≤ col < 2026-10-09"
+          setActualTimeRange(
+            formatTimeRangeForDisplay(value, locale) ?? (actualRange || ''),
+          );
         } else {
           setActualTimeRange(actualRange || '');
           setTooltipTitle(
@@ -209,7 +222,14 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
       setLastFetchedTimeRange(value);
       setEvalResponse(actualRange || value);
     });
-  }, [guessedFrame, labelIsTruncated, labelRef, value]);
+  }, [
+    guessedFrame,
+    labelIsTruncated,
+    labelRef,
+    value,
+    specificRangeOnly,
+    locale,
+  ]);
 
   useDebouncedEffect(
     () => {
@@ -271,8 +291,14 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
     setFrame(value);
   }
 
-  const overlayContent = (
-    <ContentStyleWrapper>
+  const frameContent = specificRangeOnly ? (
+    <SpecificRangeFrame
+      value={timeRangeValue}
+      onChange={setTimeRangeValue}
+      isOverflowingFilterBar={isOverflowingFilterBar}
+    />
+  ) : (
+    <>
       <div className="control-label">{t('Range type')}</div>
       <StyledRangeType
         ariaLabel={t('Range type')}
@@ -304,22 +330,43 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
         />
       )}
       {frame === 'No filter' && <div data-test={DateFilterTestKey.NoFilter} />}
+    </>
+  );
+
+  const overlayContent = (
+    <ContentStyleWrapper>
+      {frameContent}
       <Divider />
-      <div>
-        <div className="section-title">{t('Actual time range')}</div>
-        {validTimeRange && (
+      {specificRangeOnly ? (
+        // the evaluated range is redundant here: only show validation errors
+        !validTimeRange && (
+          <>
+            <IconWrapper className="warning">
+              <Icons.ExclamationCircleOutlined iconColor={theme.colorError} />
+              <span className="text error">{evalResponse}</span>
+            </IconWrapper>
+            <Divider />
+          </>
+        )
+      ) : (
+        <>
           <div>
-            {evalResponse === 'No filter' ? t('No filter') : evalResponse}
+            <div className="section-title">{t('Actual time range')}</div>
+            {validTimeRange && (
+              <div>
+                {evalResponse === 'No filter' ? t('No filter') : evalResponse}
+              </div>
+            )}
+            {!validTimeRange && (
+              <IconWrapper className="warning">
+                <Icons.ExclamationCircleOutlined iconColor={theme.colorError} />
+                <span className="text error">{evalResponse}</span>
+              </IconWrapper>
+            )}
           </div>
-        )}
-        {!validTimeRange && (
-          <IconWrapper className="warning">
-            <Icons.ExclamationCircleOutlined iconColor={theme.colorError} />
-            <span className="text error">{evalResponse}</span>
-          </IconWrapper>
-        )}
-      </div>
-      <Divider />
+          <Divider />
+        </>
+      )}
       <div className="footer">
         <Button
           buttonStyle="secondary"
@@ -368,12 +415,18 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
       }
       overlayClassName="time-range-popover"
     >
-      <Tooltip placement="top" title={tooltipTitle}>
+      {/* Creare: the dashboard filter (specificRangeOnly) shows no hover
+          tooltip; its technical range text confused report users */}
+      <Tooltip placement="top" title={specificRangeOnly ? null : tooltipTitle}>
         <DateLabel
           name={name}
           aria-labelledby={`filter-name-${props.name}`}
           aria-describedby={`date-label-${props.name}`}
-          label={actualTimeRange}
+          label={
+            actualTimeRange === NO_TIME_RANGE && placeholder
+              ? placeholder
+              : actualTimeRange
+          }
           isActive={show}
           isPlaceholder={actualTimeRange === NO_TIME_RANGE}
           data-test={DateFilterTestKey.PopoverOverlay}
