@@ -283,3 +283,8 @@ USER root
 RUN uv pip install .[duckdb]
 USER superset
 CMD ["/app/docker/entrypoints/docker-ci.sh"]
+
+#######################################################################
+# Creare image 
+#######################################################################
+FROM lean AS creare
