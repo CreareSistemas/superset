@@ -28,8 +28,6 @@ import {
 import DateFilterLabel from '..';
 import { DateFilterTestKey } from '../utils';
 
-// Creare: the period of the dashboard filter (single calendar)
-
 jest.mock('@superset-ui/core', () => ({
   ...jest.requireActual('@superset-ui/core'),
   fetchTimeRange: jest.fn(() => Promise.resolve({ value: 'evaluated' })),
@@ -57,7 +55,6 @@ test('"Apply" is disabled while only the start of the range is picked', async ()
   await screen.findByTestId('specific-range-frame');
   const apply = screen.getByTestId(DateFilterTestKey.ApplyButton);
   await waitFor(() => expect(apply).toBeEnabled());
-  // the CTAs are not in uppercase
   expect(apply).toHaveTextContent(/^Apply$/);
   expect(screen.getByTestId(DateFilterTestKey.CancelButton)).toHaveTextContent(
     /^Cancel$/,

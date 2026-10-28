@@ -79,18 +79,8 @@ export interface DropdownContainerProps {
    * Text of the dropdown trigger tooltip
    */
   dropdownTriggerTooltip?: ReactNode | null;
-  /**
-   * Custom content of the dropdown trigger button. When provided, it replaces
-   * the default trigger content (text, count badge and caret).
-   */
   renderDropdownTrigger?: (info: { count: number; open: boolean }) => ReactNode;
-  /**
-   * Class name of the dropdown trigger button.
-   */
   dropdownTriggerClassName?: string;
-  /**
-   * Class name of the dropdown popover.
-   */
   dropdownPopoverClassName?: string;
   /**
    * Main container additional style properties.

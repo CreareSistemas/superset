@@ -205,8 +205,6 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
     );
 
     const theme = useTheme();
-    // Creare: in a report (single chart with the report header) the chart has
-    // no title and its menu goes to the report header, next to the filters
     const reportHeaderSlot = useReportHeaderChartControlsSlot();
     const isInReportHeader = !editMode && !!reportHeaderSlot;
 
@@ -365,7 +363,6 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
             <div>
               <EditableTitle
                 title={
-                  // Creare: traduz o título fora do modo de edição
                   (sliceName && (editMode ? sliceName : t(sliceName))) ||
                   (editMode
                     ? '---' // this makes an empty title clickable

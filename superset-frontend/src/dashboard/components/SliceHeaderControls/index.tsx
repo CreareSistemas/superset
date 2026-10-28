@@ -555,8 +555,6 @@ const SliceHeaderControls = (
   }
 
   if (props.supersetCanCSV) {
-    // Creare: downloads go straight in the menu, without the "Download"
-    // submenu (unwanted items are hidden by the dashboard CSS)
     newMenuItems.push(
       ...[
         {

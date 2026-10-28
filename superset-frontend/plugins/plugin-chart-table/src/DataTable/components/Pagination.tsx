@@ -25,9 +25,7 @@ export interface PaginationProps {
   ellipsis?: string; // content for ellipsis item
   onPageChange: (page: number) => void; // `page` is zero-based
   style?: CSSProperties;
-  /** Creare: shown on the left of the pages (e.g. the total of results) */
   info?: ReactNode;
-  /** Creare: false renders only the info (a single page) */
   showPages?: boolean;
 }
 

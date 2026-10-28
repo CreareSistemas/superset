@@ -594,7 +594,6 @@ const Header = (): JSX.Element => {
 
   const editableTitleProps = useMemo(
     () => ({
-      // Creare: traduz o título fora do modo de edição
       title: editMode || !dashboardTitle ? dashboardTitle : t(dashboardTitle),
       canEdit: userCanEdit && editMode,
       onSave: handleChangeText,

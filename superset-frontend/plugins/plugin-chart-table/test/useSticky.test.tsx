@@ -48,10 +48,7 @@ function StickyTable({
     () => Array.from({ length: ROWS }, (_, i) => ({ a: i, b: i * 2 })),
     [],
   );
-  const getTableSize = useCallback(
-    () => ({ width, height }),
-    [width, height],
-  );
+  const getTableSize = useCallback(() => ({ width, height }), [width, height]);
   const instance = useTable<Row>(
     { columns, data, getTableSize } as Parameters<typeof useTable<Row>>[0],
     useSticky,
@@ -65,10 +62,7 @@ function StickyTable({
         <table {...getTableProps()}>
           <thead>
             {headerGroups.map(headerGroup => (
-              <tr
-                {...headerGroup.getHeaderGroupProps()}
-                key={headerGroup.id}
-              >
+              <tr {...headerGroup.getHeaderGroupProps()} key={headerGroup.id}>
                 {headerGroup.headers.map(column => (
                   <th {...column.getHeaderProps()} key={column.id}>
                     {column.render('Header')}
@@ -97,7 +91,6 @@ function StickyTable({
   );
 }
 
-// jsdom has no layout: give the measured elements their sizes
 let clientHeight: PropertyDescriptor | undefined;
 let getBoundingClientRect: typeof HTMLElement.prototype.getBoundingClientRect;
 
@@ -143,7 +136,6 @@ const getScrollBody = (container: HTMLElement) =>
 test('measures the table once and resizes the scroll area to a new height without re-rendering the rows', () => {
   const { container, rerender } = render(<StickyTable height={400} />);
 
-  // measured: no hidden sizer copy of the table is left
   expect(container.querySelectorAll('table')).toHaveLength(2);
   expect(getScrollBody(container)).toHaveStyle({
     height: `${400 - THEAD_HEIGHT}px`,
@@ -152,10 +144,9 @@ test('measures the table once and resizes the scroll area to a new height withou
   const createElement = jest.spyOn(document, 'createElement');
   rerender(<StickyTable height={600} />);
 
-  // the rows are not rendered again (no hidden sizer copy of all rows)
-  expect(
-    createElement.mock.calls.filter(([tag]) => tag === 'td'),
-  ).toHaveLength(0);
+  expect(createElement.mock.calls.filter(([tag]) => tag === 'td')).toHaveLength(
+    0,
+  );
   expect(container.querySelectorAll('table')).toHaveLength(2);
   expect(getScrollBody(container)).toHaveStyle({
     height: `${600 - THEAD_HEIGHT}px`,
@@ -169,7 +160,6 @@ test('measures the table again when the width changes', () => {
   const createElement = jest.spyOn(document, 'createElement');
   rerender(<StickyTable height={400} width={500} />);
 
-  // the hidden sizer copy of the rows is rendered to measure the columns
   expect(
     createElement.mock.calls.filter(([tag]) => tag === 'td').length,
   ).toBeGreaterThan(0);

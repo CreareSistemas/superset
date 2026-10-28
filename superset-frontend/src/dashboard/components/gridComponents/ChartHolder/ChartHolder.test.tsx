@@ -444,7 +444,6 @@ describe('ChartHolder', () => {
     expect(deleteComponent).toHaveBeenCalledTimes(1);
   });
 
-  // Creare: the last row of the embedded dashboard fills the viewport
   describe('fit to viewport', () => {
     const layout: Record<string, any> = {
       GRID_ID: {
@@ -483,7 +482,6 @@ describe('ChartHolder', () => {
 
     beforeEach(() => {
       (isEmbedded as jest.Mock).mockReturnValue(true);
-      // jsdom has no layout: the holder (without offsetParent) is at 100px
       offsetTopSpy = jest
         .spyOn(window.HTMLElement.prototype, 'offsetTop', 'get')
         .mockReturnValue(holderTop);
@@ -496,8 +494,6 @@ describe('ChartHolder', () => {
 
     test('should fill the rest of the viewport in the last row', async () => {
       renderWrapper(createMockStore(), fitProps);
-      // the holder padding (CHART_MARGIN by default, may be overridden by the
-      // dashboard CSS) and ancestors paddings/margins are measured
       const maxHeight = window.innerHeight - holderTop - DEFAULT_HEADER_HEIGHT;
 
       await waitFor(
@@ -521,7 +517,6 @@ describe('ChartHolder', () => {
       await waitFor(() => expect(getChartHeight()).toBeGreaterThan(gridHeight));
       const fittedHeight = getChartHeight();
 
-      // the filter bar is about to grow 50px: the chart shrinks right away
       act(() => {
         notifyDashboardHeaderTransition({ delta: 50, duration: 350 });
       });

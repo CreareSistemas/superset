@@ -26,9 +26,6 @@ import { DASHBOARD_HEADER_ID } from 'src/dashboard/util/constants';
 import { useFilterBarCollapse } from './FilterBarCollapse';
 import { useReportHeaderSlot } from './ReportHeaderSlot';
 
-// Creare: report header as in the platform pages (title on the left, the
-// button that shows/hides the filters on the right). Base look from the theme;
-// the dashboard CSS refines it through the classes below.
 const HeaderContainer = styled.div`
   ${({ theme }) => css`
     display: flex;
@@ -51,8 +48,6 @@ const HeaderContainer = styled.div`
       color: ${theme.colorText};
     }
 
-    /* same toggle of the platform filters: 2 px border on hover (primary)
-       and while open (primary at 50%), icon turned upside down when open */
     .report-header__filter-toggle {
       width: ${theme.sizeUnit * 8}px;
       min-width: ${theme.sizeUnit * 8}px;
@@ -88,7 +83,6 @@ const HeaderContainer = styled.div`
       gap: ${theme.sizeUnit * 2}px;
     }
 
-    /* menu (3 dots) of the chart of a report, same frame of the toggle */
     .report-header__chart-controls {
       display: flex;
       align-items: center;
@@ -107,7 +101,6 @@ const HeaderContainer = styled.div`
         background: transparent;
         color: ${theme.colorPrimary};
 
-        /* thicker dots than in the chart header */
         .anticon svg path {
           stroke: currentColor;
           stroke-width: 40px;
@@ -145,8 +138,6 @@ const ReportHeader = () => {
     <HeaderContainer className="report-header" data-test="report-header">
       <h2 className="report-header__title">{t(title)}</h2>
       <div className="report-header__actions">
-        {/* Creare: the chart of a report renders its menu here (portal),
-            before the toggle */}
         {setChartControlsSlot && (
           <div
             className="report-header__chart-controls"

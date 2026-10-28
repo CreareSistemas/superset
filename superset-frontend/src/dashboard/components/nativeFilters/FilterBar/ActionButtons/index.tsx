@@ -132,8 +132,6 @@ const ActionButtons = ({
     return hasSelectedChanges || hasAppliedChanges || hasChartCustomizations;
   }, [dataMaskSelected, dataMaskApplied, chartCustomizationItems]);
 
-  // Creare: in the horizontal bar the filters are hidden after "Search",
-  // leaving the applied filters strip (the report header shows them again)
   const collapse = useFilterBarCollapse();
   const canCollapse = !isVertical && !!collapse;
   const handleApply = () => {
@@ -153,7 +151,6 @@ const ActionButtons = ({
       onClick={handleApply}
       {...getFilterBarTestId('apply-button')}
     >
-      {/* Creare: "Pesquisar" in the horizontal bar, as in the Design System */}
       {isVertical ? t('Apply filters') : t('Search')}
     </Button>
   );
@@ -162,8 +159,6 @@ const ActionButtons = ({
     <Flex className="filter-clear-all-container">
       <Button
         disabled={!isClearAllEnabled}
-        // Creare: outlined in the horizontal bar (where "Close" was); its
-        // border and spacing come from the dashboard CSS
         buttonStyle={isVertical ? 'link' : 'tertiary'}
         className="filter-clear-all-button"
         css={(theme: SupersetTheme) =>
@@ -191,9 +186,6 @@ const ActionButtons = ({
     </Flex>
   );
 
-  // Creare: stable class names (dropped in 6.1) so the dashboard CSS can style
-  // the buttons; the horizontal bar follows the platform order
-  // (Clear all -> Search)
   return (
     <ButtonsContainer
       isVertical={isVertical}

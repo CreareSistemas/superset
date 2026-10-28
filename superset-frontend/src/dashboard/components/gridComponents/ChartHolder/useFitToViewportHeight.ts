@@ -22,17 +22,12 @@ import {
   DashboardHeaderTransition,
 } from 'src/dashboard/util/headerTransition';
 
-// Creare: below this height the chart keeps the grid height and the page scrolls
 export const FIT_MIN_HEIGHT = 300;
 
 const HEADER_SELECTOR = '[data-test="dashboard-header-wrapper"]';
 
 const toPx = (value: string) => parseFloat(value) || 0;
 
-/**
- * Space below the holder that belongs to its ancestors (paddings, borders and
- * margins), so the holder can end exactly at the bottom of the viewport.
- */
 const getBottomGap = (element: HTMLElement) => {
   let gap = toPx(window.getComputedStyle(element).marginBottom);
   let current = element.parentElement;
@@ -47,11 +42,6 @@ const getBottomGap = (element: HTMLElement) => {
   return gap;
 };
 
-/**
- * Top of the element in the document layout. Unlike getBoundingClientRect it
- * ignores transforms, so it is right even while the content is sliding (FLIP
- * animation of the filter bar).
- */
 const getLayoutTop = (element: HTMLElement) => {
   let top = 0;
   let current: HTMLElement | null = element;
@@ -67,10 +57,6 @@ const getAvailableHeight = (element: HTMLElement) =>
     window.innerHeight - getLayoutTop(element) - getBottomGap(element),
   );
 
-/**
- * Vertical space the holder itself takes around the chart. The dashboard CSS
- * may override the default padding (CHART_MARGIN), so it is measured.
- */
 const getVerticalPadding = (element: HTMLElement) => {
   const style = window.getComputedStyle(element);
   return (
@@ -82,17 +68,10 @@ const getVerticalPadding = (element: HTMLElement) => {
 };
 
 export type FitToViewportHeight = {
-  /** height of the chart holder, ending at the bottom of the viewport */
   holderHeight: number;
-  /** height left for the chart inside the holder */
   chartHeight: number;
 };
 
-/**
- * Creare: sizes the chart holder to fill the rest of the viewport. Returns
- * undefined when disabled or when the available space is smaller than
- * FIT_MIN_HEIGHT.
- */
 export default function useFitToViewportHeight(
   enabled: boolean,
   holderRef: RefObject<HTMLElement | null>,
@@ -113,7 +92,6 @@ export default function useFitToViewportHeight(
       const chartHeight = holderHeight - getVerticalPadding(holder);
       setFitHeight(current => {
         if (holderHeight < FIT_MIN_HEIGHT) return undefined;
-        // keep the same object to avoid re-rendering the chart
         if (
           current?.holderHeight === holderHeight &&
           current.chartHeight === chartHeight
@@ -125,14 +103,11 @@ export default function useFitToViewportHeight(
     };
 
     const measure = () => {
-      // while the header animates the chart already has its final size
       if (transitioning) return;
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => update());
     };
 
-    // resize once, to the final size, when the header starts animating; the
-    // chart then only slides along with the header (no re-render per frame)
     const onHeaderTransition = (event: Event) => {
       const { delta, duration } = (
         event as CustomEvent<DashboardHeaderTransition>
@@ -154,8 +129,6 @@ export default function useFitToViewportHeight(
       onHeaderTransition,
     );
 
-    // header (filters collapsing, applied filters summary) and the document
-    // itself can change the position of the holder
     let observer: ResizeObserver | undefined;
     if (typeof ResizeObserver !== 'undefined') {
       observer = new ResizeObserver(measure);

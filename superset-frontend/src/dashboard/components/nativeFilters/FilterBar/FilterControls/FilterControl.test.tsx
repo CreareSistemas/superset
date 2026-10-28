@@ -71,7 +71,6 @@ test.each([FilterBarOrientation.Horizontal, FilterBarOrientation.Vertical])(
     expect(screen.queryByText('Filter type')).not.toBeInTheDocument();
     expect(screen.queryByText('Scope')).not.toBeInTheDocument();
     expect(screen.queryByText('Pick a region')).not.toBeInTheDocument();
-    // the description icon stays (the dashboard CSS hides it)
     expect(container.querySelector('.anticon-info-circle')).toBeInTheDocument();
   },
 );

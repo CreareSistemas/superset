@@ -50,11 +50,6 @@ const isEmptyValue = (value: unknown) =>
   value === NO_TIME_RANGE ||
   (Array.isArray(value) && value.length === 0);
 
-/**
- * Display values of an applied native filter: one tag per selected value for
- * select filters, the readable period for time filters and the filter label
- * for the other types.
- */
 export const getAppliedFilterValues = (
   filter: Filter,
   dataMask: DataMask | undefined,
@@ -81,10 +76,6 @@ export const getAppliedFilterValues = (
   }
 };
 
-/**
- * Creare: applied native filters (in scope of the active tabs) and cross
- * filters, with their display values, in the filter bar order.
- */
 export function useAppliedFiltersSummary(): AppliedFilterSummaryItem[] {
   const dataMask = useSelector<RootState, DataMaskStateWithId>(
     state => state.dataMask,

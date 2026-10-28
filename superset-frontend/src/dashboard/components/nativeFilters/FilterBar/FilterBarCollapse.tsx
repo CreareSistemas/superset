@@ -18,9 +18,6 @@
  */
 import { createContext, useContext } from 'react';
 
-// Creare: shows/hides the horizontal filter bar (the report header toggle
-// and the auto collapse after "Search"). Without a
-// provider the bar is always shown.
 export interface FilterBarCollapseState {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;

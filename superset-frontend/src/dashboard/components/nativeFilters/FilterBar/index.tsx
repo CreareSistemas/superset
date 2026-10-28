@@ -94,7 +94,6 @@ const EXCLUDED_URL_PARAMS: string[] = [
 
 const EMPTY_DATA_MASK_RECORD: Record<string, DataMask> = {};
 
-// How long Clear All waits for the filter plugins to settle before applying
 const CLEAR_ALL_APPLY_DELAY_MS = 300;
 
 const publishDataMask = debounce(
@@ -558,10 +557,6 @@ const FilterBar: FC<FiltersBarProps> = ({
     dispatch,
   ]);
 
-  // Creare: Clear All also applies, so the user doesn't have to click Apply
-  // afterwards. The filter plugins react to clearAllTriggers in their own
-  // effects (updating dataMaskSelected), so wait for them to settle: every
-  // change recreates handleApply and restarts the timer.
   useEffect(() => {
     if (!applyAfterClearAll) {
       return undefined;

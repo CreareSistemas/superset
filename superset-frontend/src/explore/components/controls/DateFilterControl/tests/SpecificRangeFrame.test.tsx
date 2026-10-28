@@ -42,7 +42,6 @@ const renderFrame = (value: string) => {
 const day = (date: string) =>
   document.querySelector(`[data-date="${date}"]`) as HTMLElement;
 
-// range saved before the calendar: the end (17th at midnight) is exclusive
 const legacyValue = '2021-03-16T00:00:00 : 2021-03-17T00:00:00';
 
 test('shows a single calendar with the start and end times, no date pickers', async () => {

@@ -2393,7 +2393,6 @@ describe('plugin-chart-table', () => {
   });
 });
 
-// Creare: total of results on the pagination row
 test('shows the total of results on the pagination row', () => {
   render(
     ProviderWrapper({

@@ -120,9 +120,6 @@ test('the popover has no title (no pencil icon)', () => {
   userEvent.click(screen.getByText(NO_TIME_RANGE));
   expect(screen.getByText('CANCEL')).toBeInTheDocument();
   expect(screen.queryByLabelText('Edit time range')).not.toBeInTheDocument();
-  expect(
-    screen.queryByRole('img', { name: 'creare-edit' }),
-  ).not.toBeInTheDocument();
 });
 
 test('the field shows the Calendar icon of the platform', () => {

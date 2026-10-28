@@ -343,8 +343,6 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
     [formData.sortAscending, formData.sortMetric],
   );
 
-  // Creare: multi-select options show a checkbox (Design System option list),
-  // so it is clear which values are selected
   const selectedValues = useMemo(
     () => new Set(ensureIsArray(filterState.value)),
     [filterState.value],
@@ -365,8 +363,6 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
                 {option.label || option.value}
               </Space>
             ),
-            // the checkbox replaces the trailing check mark; the "stop" mark
-            // of excluded values stays
             ...(!(inverseSelection && excludeFilterValues) && {
               menuItemSelectedIcon: null,
             }),

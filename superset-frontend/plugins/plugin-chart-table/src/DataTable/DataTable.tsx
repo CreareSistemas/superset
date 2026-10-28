@@ -92,7 +92,6 @@ export interface DataTableProps<D extends object> extends TableOptions<D> {
   searchOptions: SearchOption[];
   onFilteredDataChange?: (rows: Row<D>[], filterValue?: string) => void;
   onFilteredRowsChange?: (rows: D[]) => void;
-  /** Creare: shown on the left of the pagination row (total of results) */
   footerInfo?: ReactNode;
 }
 
@@ -212,7 +211,6 @@ export default typedMemo(function DataTable<D extends object>({
     paginationRef,
     resultsSize,
     paginationData,
-    // Creare: the pagination row also shows up for the footer info
     !!footerInfo,
   ]);
 

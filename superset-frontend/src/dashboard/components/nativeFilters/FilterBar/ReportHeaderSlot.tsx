@@ -20,10 +20,6 @@ import { createContext, useContext } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from 'src/dashboard/types';
 
-// Creare: place in the report header (next to the button that shows/hides the
-// filters) where the chart of a single chart dashboard (a report) renders its
-// menu (the 3 dots), instead of the chart header with the title. Without a
-// provider, or before the report header is mounted, the slot is null.
 export interface ReportHeaderSlotState {
   slot: HTMLElement | null;
   setSlot: (slot: HTMLElement | null) => void;
@@ -34,10 +30,6 @@ export const ReportHeaderSlotContext =
 
 export const useReportHeaderSlot = () => useContext(ReportHeaderSlotContext);
 
-/**
- * Element where the chart menu goes, or null when the chart keeps its own
- * header (no report header, or more than one chart in the dashboard).
- */
 export const useReportHeaderChartControlsSlot = () => {
   const slot = useReportHeaderSlot()?.slot ?? null;
   const isSingleChart = useSelector<RootState, boolean>(

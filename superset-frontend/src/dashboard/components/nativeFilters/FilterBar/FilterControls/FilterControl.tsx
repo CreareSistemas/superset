@@ -139,8 +139,6 @@ const FilterControl = ({
             : 'vertical'
         }
       >
-        {/* Creare: no FilterCard popover (name/type/scope) on hover, it only
-            confused report users */}
         <div>
           <FormItem
             label={label}

@@ -424,7 +424,6 @@ test('FilterControls overflowedByIndex updates when filters change scope', () =>
 });
 
 test('horizontal bar shows every filter in the bar, without a "More filters" popover', () => {
-  // no tabs: every filter is in scope
   const defaultState = getDefaultState(FilterBarOrientation.Horizontal);
   const state = {
     ...defaultState,

@@ -39,27 +39,16 @@ import { useLocale } from 'src/hooks/useLocale';
 import { ExplorePageState } from 'src/explore/types';
 import { RangeCalendar } from './RangeCalendar';
 
-/*
- * Creare: a single calendar to pick the period (see RangeCalendar, as in the
- * Figma of the platform): 1st click = start day, 2nd click = end day; start
- * and end times below. The last day is included
- * in full: the end is saved with 59 seconds (23:59 -> 23:59:59).
- */
-
 const TIME_FORMAT = 'HH:mm';
 
-// width of the popover content: the calendar, the times and the buttons
-// fill all of it (no blank space on the right)
 const RANGE_FRAME_WIDTH = 308;
 
-// grey line between the calendar and the times
 const SEPARATOR_COLOR = '#E0E0E0';
 
 const RangeFrame = styled.div`
   ${({ theme }) => css`
     width: ${RANGE_FRAME_WIDTH}px;
 
-    /* start and end times side by side, so the popover is not too tall */
     .range-calendar__times {
       display: flex;
       gap: ${theme.sizeUnit * 3}px;
@@ -82,7 +71,6 @@ const RangeFrame = styled.div`
   `}
 `;
 
-/** "1234" -> "12:34", limiting hours to 23 and minutes to 59 (as the lib) */
 export function formatTimeDraft(value: string) {
   const digits = value.replace(/\D/g, '').slice(0, 4);
   if (!digits) return '';
@@ -118,11 +106,6 @@ type RangeState = {
 const isMidnight = (date: Dayjs) =>
   date.hour() === 0 && date.minute() === 0 && date.second() === 0;
 
-/**
- * Days and times of the current value. An end at midnight (exclusive, as
- * saved before this calendar) becomes the previous day at 23:59:59, which
- * covers the same data. Any other time range becomes the last 7 days.
- */
 export function getInitialRange(value: string): {
   range: RangeState;
   isSpecificRange: boolean;
@@ -185,7 +168,6 @@ export function SpecificRangeFrame(props: FrameComponentProps) {
     );
   };
 
-  // any other time range ("Last week", "No filter"...) becomes the last 7 days
   useEffect(() => {
     if (!initial.isSpecificRange) {
       emit(initial.range);
@@ -200,7 +182,6 @@ export function SpecificRangeFrame(props: FrameComponentProps) {
   const onSelectDay = (day: Dayjs) => {
     const picked = day.startOf('day');
     if (!range.startDay || range.endDay) {
-      // 1st click: new start, waiting for the end
       setRange({ ...range, startDay: picked, endDay: null });
       onPendingChange?.(true);
       return;
@@ -215,7 +196,6 @@ export function SpecificRangeFrame(props: FrameComponentProps) {
   const isSameDayRange = () =>
     Boolean(range.startDay && range.endDay?.isSame(range.startDay, 'day'));
 
-  // on the same day the start can't be after the end (and vice versa)
   const onChangeStartTime = (time: string) => {
     const endTime =
       isSameDayRange() && time > range.endTime ? time : range.endTime;

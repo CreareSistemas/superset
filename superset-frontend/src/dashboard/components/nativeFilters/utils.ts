@@ -104,7 +104,6 @@ export const getFormData = ({
     type,
     dashboardId,
     native_filter_id: id,
-    // Creare: lets the filter plugins build their placeholder from the name
     native_filter_name: name,
   };
 };

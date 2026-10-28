@@ -22,15 +22,10 @@ import { css, styled } from '@apache-superset/core/theme';
 import { Tooltip } from '@superset-ui/core/components';
 import { useAppliedFiltersSummary } from './useAppliedFiltersSummary';
 
-// Number of tag colors of the Design System (see the dashboard CSS)
 const TAG_COLORS = 5;
 
-// Creare: with many values the strip would grow without limit, so each
-// filter shows only its first values and a "+N" tag with the others
 export const MAX_TAGS_PER_FILTER = 3;
 
-// Creare: Design System "Filtro/Resumo" strip. Base layout and colors come from
-// the theme; the dashboard CSS refines it through the classes below.
 const SummaryContainer = styled.div`
   ${({ theme }) => css`
     display: flex;

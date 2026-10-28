@@ -20,9 +20,6 @@ import { t } from '@apache-superset/core/translation';
 import { customTimeRangeDecode } from '@superset-ui/core';
 import { dttmToDayjs } from './dateParser';
 
-// Creare: day/month/year for Portuguese and Spanish, month/day/year for
-// English, ISO otherwise (same formats as the date pickers of
-// SpecificRangeFrame)
 const DAY_FIRST_LOCALES = ['pt', 'pt_BR', 'es'];
 const MONTH_FIRST_LOCALES = ['en', 'en_US'];
 
@@ -36,15 +33,6 @@ export const getDateDisplayFormat = (locale?: string) => {
   return 'YYYY-MM-DD';
 };
 
-/**
- * Creare: human readable text of a specific time range
- * ("2026-10-02T00:00:00 : 2026-10-09T00:00:00" -> "02/10/2026 to 09/10/2026"),
- * instead of the technical "2026-10-02 ≤ col < 2026-10-09". The hours are
- * shown only when the range is not made of whole days (start at midnight and
- * end at 23:59:59, as saved by the calendar, or at midnight, as before it).
- *
- * Returns undefined when the value is not a specific range (e.g. "Last week").
- */
 export function formatTimeRangeForDisplay(
   value: string | null | undefined,
   locale?: string,
@@ -67,7 +55,6 @@ export function formatTimeRangeForDisplay(
   }
   const isMidnight = (date: typeof since) =>
     date.hour() === 0 && date.minute() === 0 && date.second() === 0;
-  // the calendar saves the last day in full (end at 23:59:59)
   const isEndOfDay = (date: typeof since) =>
     date.hour() === 23 && date.minute() === 59 && date.second() === 59;
   const isWholeDays =

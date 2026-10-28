@@ -107,7 +107,6 @@ const ContentStyleWrapper = styled.div`
       text-align: right;
     }
 
-    /* Creare: in the period filter the buttons fill the width of the calendar */
     .footer--range {
       display: flex;
       gap: ${theme.sizeUnit * 2}px;
@@ -181,7 +180,6 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   const [lastFetchedTimeRange, setLastFetchedTimeRange] = useState(value);
   const [timeRangeValue, setTimeRangeValue] = useState(value);
   const [validTimeRange, setValidTimeRange] = useState<boolean>(false);
-  // Creare: only the start of the range picked in the calendar
   const [rangePending, setRangePending] = useState<boolean>(false);
   const [evalResponse, setEvalResponse] = useState<string>(value);
   const [tooltipTitle, setTooltipTitle] = useState<ReactNode | null>(value);
@@ -223,7 +221,6 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
             getTooltipTitle(labelIsTruncated, value, actualRange),
           );
         } else if (specificRangeOnly) {
-          // Creare: readable dates instead of "2026-10-02 ≤ col < 2026-10-09"
           setActualTimeRange(
             formatTimeRangeForDisplay(value, locale) ?? (actualRange || ''),
           );
@@ -355,10 +352,8 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   const overlayContent = (
     <ContentStyleWrapper>
       {frameContent}
-      {/* Creare: no line between the times and the buttons of the period */}
       {!specificRangeOnly && <Divider />}
       {specificRangeOnly ? (
-        // the evaluated range is redundant here: only show validation errors
         !validTimeRange && (
           <>
             <IconWrapper className="warning">
@@ -395,7 +390,6 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
           onClick={onHide}
           data-test={DateFilterTestKey.CancelButton}
         >
-          {/* Creare: no uppercase in the period filter */}
           {specificRangeOnly ? t('Cancel') : t('CANCEL')}
         </Button>
         <Button
@@ -416,16 +410,8 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
     <ControlPopover
       autoAdjustOverflow={false}
       trigger="click"
-      // Creare: the single calendar opens below the field
       placement={specificRangeOnly ? 'bottomLeft' : 'right'}
       content={overlayContent}
-      // Creare: no title (testing without the pencil). To show the "Edit" icon
-      // of lib-react-commons-ui again, uncomment:
-      // title={
-      //   <IconWrapper aria-label={t('Edit time range')}>
-      //     <Icons.CreareEdit iconSize="xl" />
-      //   </IconWrapper>
-      // }
       defaultOpen={show}
       open={show}
       onOpenChange={toggleOverlay}
@@ -438,8 +424,6 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
       }
       overlayClassName="time-range-popover"
     >
-      {/* Creare: the dashboard filter (specificRangeOnly) shows no hover
-          tooltip; its technical range text confused report users */}
       <Tooltip placement="top" title={specificRangeOnly ? null : tooltipTitle}>
         <DateLabel
           name={name}

@@ -72,7 +72,6 @@ test('joins the days of the range with a band rounded at the week ends', () => {
     'range-calendar__cell--band-start',
   );
   expect(cell('2024-10-10')).toHaveClass('range-calendar__cell--band');
-  // Saturday and Sunday: the band ends and starts again on the next week
   expect(cell('2024-10-12')).toHaveClass('range-calendar__cell--round-right');
   expect(cell('2024-10-13')).toHaveClass('range-calendar__cell--round-left');
   expect(cell('2024-10-17')).toHaveClass('range-calendar__cell--band-end');
@@ -99,7 +98,6 @@ test('while the end is not picked, the range follows the mouse', () => {
 
   userEvent.unhover(day('2024-10-17')!);
   userEvent.hover(day('2024-10-05')!);
-  // before the start: the preview goes backwards
   expect(cell('2024-10-07')).toHaveClass('range-calendar__cell--band');
   expect(cell('2024-10-12')).not.toHaveClass('range-calendar__cell--band');
 });

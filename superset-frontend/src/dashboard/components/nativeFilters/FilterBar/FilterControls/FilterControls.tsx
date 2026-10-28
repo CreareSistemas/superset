@@ -116,9 +116,6 @@ const StyledIcon = styled(Icons.UpOutlined)<{ isOpen: boolean }>`
   color: ${({ theme }) => theme.colorTextSecondary};
 `;
 
-// Creare: the filters of the horizontal bar wrap to new rows instead of going
-// to a "More filters" popover; each field grows to fill the row (up to a
-// maximum) and shrinks down to a minimum before wrapping
 const HorizontalFilters = styled.div`
   ${({ theme }) => css`
     display: flex;
@@ -566,8 +563,6 @@ const FilterControls: FC<FilterControlsProps> = ({
     [items],
   );
 
-  // Creare: no filter overflows in the horizontal bar anymore; out of scope
-  // filters (other tabs) are not shown there
   const overflowedByIndex = useMemo(() => {
     const filtersOutOfScopeIds = new Set(filtersOutOfScope.map(({ id }) => id));
     return filtersWithValues.map(

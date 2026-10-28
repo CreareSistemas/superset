@@ -24,26 +24,15 @@ import { Button, Icons } from '@superset-ui/core/components';
 import { extendedDayjs } from '@superset-ui/core/utils/dates';
 import { Dayjs } from 'dayjs';
 
-/*
- * Creare: month calendar of the period filter, as in the Figma of the
- * platform: the days of the range joined by a band (rounded at the ends of
- * each week), start and end in solid color, a preview of the range while the
- * end is not picked yet (dashed circle on the hovered day), only the days of
- * the month and the month/year picked from the title.
- */
-
-// Creare Design System: turquoise band of the range
 const RANGE_BAND_COLOR = 'rgba(32, 172, 172, 0.4)';
 const RANGE_PREVIEW_COLOR = '#20ACAC';
 
 const CELL_SIZE = 34;
 const DAY_SIZE = 30;
-// the band is thinner than the circle of the day
 const BAND_HEIGHT = 22;
 
 const CalendarRoot = styled.div`
   ${({ theme }) => css`
-    /* the columns stretch to the width of the popover */
     width: 100%;
     min-width: ${CELL_SIZE * 7}px;
     user-select: none;
@@ -107,7 +96,6 @@ const CalendarRoot = styled.div`
       height: ${CELL_SIZE}px;
     }
 
-    /* the band of the range, behind the day */
     .range-calendar__cell--band::before {
       content: '';
       position: absolute;
@@ -126,7 +114,6 @@ const CalendarRoot = styled.div`
       right: 50%;
     }
 
-    /* the cells are wider than the days: round at the edge of the day */
     .range-calendar__cell--round-left::before {
       left: calc(50% - ${DAY_SIZE / 2}px);
       border-top-left-radius: ${BAND_HEIGHT / 2}px;
@@ -173,7 +160,6 @@ const CalendarRoot = styled.div`
       font-weight: ${theme.fontWeightStrong};
     }
 
-    /* end of the range while it is not picked yet */
     && .range-calendar__day--preview {
       border: 1px dashed ${RANGE_PREVIEW_COLOR};
     }
@@ -208,10 +194,8 @@ const CalendarRoot = styled.div`
   `}
 `;
 
-/** One letter per week day, starting on Sunday: "D S T Q Q S S" */
 const getWeekDayLetters = (locale: string) => {
   const format = new Intl.DateTimeFormat(locale, { weekday: 'narrow' });
-  // 2024-09-01 was a Sunday
   return [...Array(7)].map((_, index) =>
     format.format(new Date(2024, 8, 1 + index)),
   );
@@ -221,7 +205,6 @@ export type RangeCalendarProps = {
   startDay: Dayjs | null;
   endDay: Dayjs | null;
   onSelectDay: (day: Dayjs) => void;
-  /** dayjs locale, e.g. "pt-br" */
   locale: string;
   initialMonth?: Dayjs;
 };
@@ -250,7 +233,6 @@ export function RangeCalendar({
     return [...letters.slice(weekStart), ...letters.slice(0, weekStart)];
   }, [locale, weekStart]);
 
-  // while only the start is picked, the range follows the mouse
   const isPreview = Boolean(startDay && !endDay && hoverDay);
   const [rangeStart, rangeEnd] = useMemo(() => {
     if (startDay && !endDay && hoverDay) {
@@ -303,7 +285,6 @@ export function RangeCalendar({
           'range-calendar__cell--band': inBand,
           'range-calendar__cell--band-start': inBand && isBandStart,
           'range-calendar__cell--band-end': inBand && isBandEnd,
-          // the band is rounded at the ends of each week and of the month
           'range-calendar__cell--round-left':
             inBand && !isBandStart && (column === 0 || day.date() === 1),
           'range-calendar__cell--round-right':
@@ -378,7 +359,6 @@ export function RangeCalendar({
           <div className="range-calendar__weekdays">
             {weekDays.map((letter, index) => (
               <div
-                // the letters repeat (S, Q), the position is the key
                 // eslint-disable-next-line react/no-array-index-key
                 key={index}
                 className="range-calendar__weekday"

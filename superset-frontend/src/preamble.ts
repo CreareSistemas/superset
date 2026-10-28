@@ -65,8 +65,6 @@ export default function initPreamble(): Promise<void> {
     // Load language pack before rendering
     // Use native fetch to avoid race condition with SupersetClient initialization
     const lang = bootstrapData.common.locale || 'en';
-    // Creare: carrega também em inglês, para aplicar as traduções customizadas
-    // (o pacote "en" do backend é o empty_language_pack + o dicionário Creare)
     if (lang) {
       const abortController = new AbortController();
       const timeoutId = window.setTimeout(() => {
@@ -83,10 +81,7 @@ export default function initPreamble(): Promise<void> {
         }
         const json = await resp.json();
         configure({ languagePack: json as LanguagePack });
-        // Creare: o Superset usa pt_BR e o dayjs usa pt-br
         dayjs.locale(lang.toLowerCase().replace('_', '-'));
-        // Creare: idioma do documento (pt-BR), usado também para formatar
-        // números nos plugins (ex.: total de resultados da tabela)
         document.documentElement.lang = lang.replace('_', '-');
       } catch (err) {
         logging.warn(

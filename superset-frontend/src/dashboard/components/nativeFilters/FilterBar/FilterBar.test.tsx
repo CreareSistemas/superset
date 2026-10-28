@@ -695,7 +695,6 @@ test('Clear All applies the cleared filters without clicking Apply', async () =>
     jest.advanceTimersByTime(500);
   });
 
-  // handleApply ran on its own and dispatched the cleared filter
   expect(updateDataMaskSpy.mock.calls.length).toBeGreaterThan(callsAfterClear);
   expect(updateDataMaskSpy).toHaveBeenLastCalledWith(
     filterId,

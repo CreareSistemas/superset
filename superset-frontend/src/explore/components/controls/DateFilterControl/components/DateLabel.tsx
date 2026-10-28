@@ -88,7 +88,6 @@ export const DateLabel = forwardRef(
       >
         {typeof props.label === 'string' ? t(props.label) : props.label}
       </span>
-      {/* Creare: "Calendar" of lib-react-commons-ui */}
       <Icons.CreareCalendar iconSize="l" />
     </LabelContainer>
   ),

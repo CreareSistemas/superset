@@ -117,8 +117,6 @@ const StyledHeader = styled.div<{ filterBarWidth: number }>`
     top: 0;
     z-index: 99;
     max-width: calc(100vw - ${filterBarWidth}px);
-    /* Creare: lets the grid column shrink when the vertical scrollbar
-       appears, otherwise the page gets a horizontal scroll */
     min-width: 0;
 
     .empty-droptarget:before {
@@ -141,7 +139,6 @@ const StyledContent = styled.div<{
 }>`
   grid-column: 2;
   grid-row: 2;
-  /* Creare: see StyledHeader */
   min-width: 0;
   // @z-index-above-dashboard-header (100) + 1 = 101
   ${({ fullSizeChartId }) => fullSizeChartId && `z-index: 101;`}
@@ -527,15 +524,10 @@ const DashboardBuilder = () => {
     currentTopLevelTabs.current = topLevelTabs;
   }, [topLevelTabs]);
 
-  // Creare: the horizontal filter bar starts open and can be hidden
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
-  // Creare: the bar changes its height at once and slides like a drawer; the
-  // content below slides along with it from where it was to its new place
-  // (FLIP), so nothing is laid out or re-rendered on every animation frame
   const contentRef = useRef<HTMLDivElement>(null);
   const contentTopBeforeToggle = useRef<number>();
   const setFiltersCollapsedAnimated = useCallback((collapsed: boolean) => {
-    // where the content is seen now (also in the middle of a slide)
     contentTopBeforeToggle.current =
       contentRef.current?.getBoundingClientRect().top;
     setFiltersCollapsed(collapsed);
@@ -550,7 +542,6 @@ const DashboardBuilder = () => {
       '.filter-bar-collapse',
     );
     const bar = collapse?.firstElementChild as HTMLElement | null | undefined;
-    // content of the header below the filter bar (applied filters, tabs)
     const below: HTMLElement[] = [];
     for (
       let element = collapse?.nextElementSibling;
@@ -561,14 +552,12 @@ const DashboardBuilder = () => {
     }
     const moving = [content, ...below];
 
-    // a previous toggle may still be animating
     stopSlide(bar ? [...moving, bar] : moving);
     if (collapse) {
       collapse.style.overflow = '';
       collapse.style.clipPath = '';
     }
 
-    // the layout is final now: charts fitted to the viewport resize once
     notifyDashboardHeaderTransition({
       delta: 0,
       duration: FILTER_BAR_COLLAPSE_DURATION,
@@ -577,14 +566,11 @@ const DashboardBuilder = () => {
     const offset = previousTop - content.getBoundingClientRect().top;
     if (!offset) return;
     if (offset < 0 && bar) {
-      // opened: the bar comes down (clipped by its wrapper) with the content
       slideFromOffset([bar, ...moving], offset, FILTER_BAR_COLLAPSE_DURATION);
       return;
     }
     slideFromOffset(moving, offset, FILTER_BAR_COLLAPSE_DURATION);
     if (offset > 0 && collapse && bar) {
-      // closed: the wrapper takes no space anymore, but the bar stays visible
-      // where it was, going up (clipped at its top) while the content follows
       collapse.style.overflow = 'visible';
       collapse.style.clipPath = `inset(0 -${offset}px -${offset}px -${offset}px)`;
       slideToOffset(bar, -offset, FILTER_BAR_COLLAPSE_DURATION, () => {
@@ -601,8 +587,6 @@ const DashboardBuilder = () => {
     [filtersCollapsed, setFiltersCollapsedAnimated],
   );
 
-  // Creare: the report header gives the chart of a report (single chart) a
-  // place for its menu, next to the button that shows/hides the filters
   const [reportHeaderSlot, setReportHeaderSlot] = useState<HTMLElement | null>(
     null,
   );
@@ -611,9 +595,6 @@ const DashboardBuilder = () => {
     [reportHeaderSlot],
   );
 
-  // Creare: the collapse state reaches the filter bar through the context
-  // provider around this content (see the render), so opening/closing the
-  // filters re-renders only its consumers, not the whole header
   const headerContent = useMemo(
     () => (
       <>
@@ -621,14 +602,11 @@ const DashboardBuilder = () => {
         {showFilterBar &&
           filterBarOrientation === FilterBarOrientation.Horizontal && (
             <>
-              {/* Creare: report header with the button that shows/hides
-                  the filters, as in the platform pages */}
               {!isReport && <ReportHeader />}
               <FilterBar
                 orientation={FilterBarOrientation.Horizontal}
                 hidden={isReport}
               />
-              {/* Creare: applied filters at a glance, below the filter bar */}
               {!isReport && <AppliedFiltersSummary />}
             </>
           )}
