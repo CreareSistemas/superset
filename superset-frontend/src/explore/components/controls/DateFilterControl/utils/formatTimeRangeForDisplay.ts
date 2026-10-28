@@ -40,8 +40,8 @@ export const getDateDisplayFormat = (locale?: string) => {
  * Creare: human readable text of a specific time range
  * ("2026-10-02T00:00:00 : 2026-10-09T00:00:00" -> "02/10/2026 to 09/10/2026"),
  * instead of the technical "2026-10-02 ≤ col < 2026-10-09". The hours are
- * shown only when one of the ends is not at midnight. The end is shown as
- * picked in the date picker (it is excluded from the range).
+ * shown only when the range is not made of whole days (start at midnight and
+ * end at 23:59:59, as saved by the calendar, or at midnight, as before it).
  *
  * Returns undefined when the value is not a specific range (e.g. "Last week").
  */
@@ -67,8 +67,11 @@ export function formatTimeRangeForDisplay(
   }
   const isMidnight = (date: typeof since) =>
     date.hour() === 0 && date.minute() === 0 && date.second() === 0;
-  const format = `${getDateDisplayFormat(locale)}${
-    isMidnight(since) && isMidnight(until) ? '' : ' HH:mm'
-  }`;
+  // the calendar saves the last day in full (end at 23:59:59)
+  const isEndOfDay = (date: typeof since) =>
+    date.hour() === 23 && date.minute() === 59 && date.second() === 59;
+  const isWholeDays =
+    isMidnight(since) && (isMidnight(until) || isEndOfDay(until));
+  const format = `${getDateDisplayFormat(locale)}${isWholeDays ? '' : ' HH:mm'}`;
   return t('%s to %s', since.format(format), until.format(format));
 }

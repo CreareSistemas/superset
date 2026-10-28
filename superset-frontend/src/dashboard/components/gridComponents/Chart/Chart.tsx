@@ -347,8 +347,11 @@ const Chart = (props: ChartProps) => {
       const computedHeight = getComputedStyle(
         headerRef.current,
       ).getPropertyValue('height');
-      const headerHeight =
-        parseInt(computedHeight, 10) || DEFAULT_HEADER_HEIGHT;
+      // Creare: an empty header (report, menu in the report header) is 0 px
+      const parsedHeight = parseInt(computedHeight, 10);
+      const headerHeight = Number.isNaN(parsedHeight)
+        ? DEFAULT_HEADER_HEIGHT
+        : parsedHeight;
       return headerHeight + marginBottom;
     }
     return DEFAULT_HEADER_HEIGHT;

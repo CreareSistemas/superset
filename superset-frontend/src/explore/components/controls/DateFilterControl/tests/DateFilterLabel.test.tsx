@@ -100,18 +100,36 @@ test('Open and close popover', () => {
   // click "Cancel"
   userEvent.click(screen.getByText(NO_TIME_RANGE));
   expect(defaultProps.onOpenPopover).toHaveBeenCalled();
-  expect(screen.getByText('Edit time range')).toBeInTheDocument();
+  expect(screen.getByText('CANCEL')).toBeInTheDocument();
   userEvent.click(screen.getByText('CANCEL'));
   expect(defaultProps.onClosePopover).toHaveBeenCalled();
-  expect(screen.queryByText('Edit time range')).not.toBeInTheDocument();
+  expect(screen.queryByText('CANCEL')).not.toBeInTheDocument();
 
   // click "Apply"
   userEvent.click(screen.getByText(NO_TIME_RANGE));
   expect(defaultProps.onOpenPopover).toHaveBeenCalled();
-  expect(screen.getByText('Edit time range')).toBeInTheDocument();
+  expect(screen.getByText('CANCEL')).toBeInTheDocument();
   userEvent.click(screen.getByText('APPLY'));
   expect(defaultProps.onClosePopover).toHaveBeenCalled();
-  expect(screen.queryByText('Edit time range')).not.toBeInTheDocument();
+  expect(screen.queryByText('CANCEL')).not.toBeInTheDocument();
+});
+
+test('the popover has no title (no pencil icon)', () => {
+  render(setup());
+
+  userEvent.click(screen.getByText(NO_TIME_RANGE));
+  expect(screen.getByText('CANCEL')).toBeInTheDocument();
+  expect(screen.queryByLabelText('Edit time range')).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole('img', { name: 'creare-edit' }),
+  ).not.toBeInTheDocument();
+});
+
+test('the field shows the Calendar icon of the platform', () => {
+  render(setup());
+  expect(
+    screen.getByRole('img', { name: 'creare-calendar' }),
+  ).toBeInTheDocument();
 });
 
 test('DateFilter popover should attach to document.body when not overflowing', () => {

@@ -132,8 +132,8 @@ const ActionButtons = ({
     return hasSelectedChanges || hasAppliedChanges || hasChartCustomizations;
   }, [dataMaskSelected, dataMaskApplied, chartCustomizationItems]);
 
-  // Creare: in the horizontal bar the filters can be hidden ("Close") and are
-  // hidden after "Search", leaving the applied filters strip
+  // Creare: in the horizontal bar the filters are hidden after "Search",
+  // leaving the applied filters strip (the report header shows them again)
   const collapse = useFilterBarCollapse();
   const canCollapse = !isVertical && !!collapse;
   const handleApply = () => {
@@ -142,17 +142,6 @@ const ActionButtons = ({
       collapse.setCollapsed(true);
     }
   };
-
-  const closeButton = canCollapse ? (
-    <Button
-      buttonStyle="tertiary"
-      className="filter-close-button"
-      onClick={() => collapse.setCollapsed(true)}
-      {...getFilterBarTestId('close-button')}
-    >
-      {t('Close')}
-    </Button>
-  ) : null;
 
   const applyButton = (
     <Button
@@ -173,10 +162,13 @@ const ActionButtons = ({
     <Flex className="filter-clear-all-container">
       <Button
         disabled={!isClearAllEnabled}
-        // Creare: text button (the outlined one is "Close")
-        buttonStyle="link"
+        // Creare: outlined in the horizontal bar (where "Close" was); its
+        // border and spacing come from the dashboard CSS
+        buttonStyle={isVertical ? 'link' : 'tertiary'}
         className="filter-clear-all-button"
-        css={(theme: SupersetTheme) => clearAllButtonStyle(theme)}
+        css={(theme: SupersetTheme) =>
+          isVertical ? clearAllButtonStyle(theme) : undefined
+        }
         onClick={onClearAll}
         {...getFilterBarTestId('clear-button')}
       >
@@ -201,7 +193,7 @@ const ActionButtons = ({
 
   // Creare: stable class names (dropped in 6.1) so the dashboard CSS can style
   // the buttons; the horizontal bar follows the platform order
-  // (Clear all -> Close -> Search)
+  // (Clear all -> Search)
   return (
     <ButtonsContainer
       isVertical={isVertical}
@@ -209,7 +201,6 @@ const ActionButtons = ({
       data-test="filterbar-action-buttons"
     >
       {isVertical ? applyButton : clearAllButton}
-      {closeButton}
       {isVertical ? clearAllButton : applyButton}
     </ButtonsContainer>
   );

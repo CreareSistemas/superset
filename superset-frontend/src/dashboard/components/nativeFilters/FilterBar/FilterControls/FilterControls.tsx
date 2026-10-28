@@ -16,34 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import {
-  memo,
-  Fragment,
-  FC,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { memo, Fragment, FC, useCallback, useMemo, useState } from 'react';
 import { t } from '@apache-superset/core/translation';
 import {
   DataMask,
   DataMaskStateWithId,
   Filter,
   Divider,
-  isNativeFilterWithDataMask,
   NativeFilterTarget,
   ChartCustomization,
   isChartCustomizationDivider,
   ChartCustomizationDivider,
 } from '@superset-ui/core';
-import {
-  css,
-  SupersetTheme,
-  useTheme,
-  styled,
-} from '@apache-superset/core/theme';
+import { css, useTheme, styled } from '@apache-superset/core/theme';
 import {
   createHtmlPortalNode,
   InPortal,
@@ -56,11 +41,7 @@ import {
   useSelectCustomizationsInScope,
 } from 'src/dashboard/components/nativeFilters/state';
 import { FilterBarOrientation, RootState } from 'src/dashboard/types';
-import {
-  DropdownContainer,
-  type DropdownRef as DropdownContainerRef,
-  Typography,
-} from '@superset-ui/core/components';
+import { Typography } from '@superset-ui/core/components';
 import { Icons } from '@superset-ui/core/components/Icons';
 import { useChartIds } from 'src/dashboard/util/charts/useChartIds';
 import { useChartLayoutItems } from 'src/dashboard/util/useChartLayoutItems';
@@ -69,14 +50,11 @@ import { getInitialDataMask } from 'src/dataMask/reducer';
 import { FiltersOutOfScopeCollapsible } from '../FiltersOutOfScopeCollapsible';
 import { CustomizationsOutOfScopeCollapsible } from '../CustomizationsOutOfScopeCollapsible';
 import { useFilterControlFactory } from '../useFilterControlFactory';
-import { FiltersDropdownContent } from '../FiltersDropdownContent';
 import crossFiltersSelector from '../CrossFilters/selectors';
 import CrossFilter from '../CrossFilters/CrossFilter';
-import { useFilterOutlined } from '../useFilterOutlined';
 import { useChartsVerboseMaps } from '../utils';
 import FilterControl from './FilterControl';
 import FilterDivider from './FilterDivider';
-import { MoreFiltersTrigger } from './MoreFiltersTrigger';
 
 function addDataMaskToCustomization(
   customization: ChartCustomization,
@@ -138,6 +116,40 @@ const StyledIcon = styled(Icons.UpOutlined)<{ isOpen: boolean }>`
   color: ${({ theme }) => theme.colorTextSecondary};
 `;
 
+// Creare: the filters of the horizontal bar wrap to new rows instead of going
+// to a "More filters" popover; each field grows to fill the row (up to a
+// maximum) and shrinks down to a minimum before wrapping
+const HorizontalFilters = styled.div`
+  ${({ theme }) => css`
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: ${theme.sizeUnit * 4}px;
+    min-width: 0;
+    padding: 0 ${theme.sizeUnit * 4}px;
+
+    & > .filter-item-wrapper {
+      flex: 1 1 ${theme.sizeUnit * 65}px;
+      min-width: ${theme.sizeUnit * 50}px;
+      max-width: ${theme.sizeUnit * 90}px;
+    }
+
+    & > .filter-item-wrapper:has(.ant-select-multiple) {
+      flex-basis: ${theme.sizeUnit * 90}px;
+      max-width: ${theme.sizeUnit * 120}px;
+    }
+
+    & > .filter-item-wrapper > *,
+    & > .filter-item-wrapper .ant-form-item,
+    & > .filter-item-wrapper .ant-form-item-row,
+    & > .filter-item-wrapper .ant-form-item-control {
+      width: 100%;
+      min-width: 0;
+    }
+  `}
+`;
+
 const ChartCustomizationContent = styled.div`
   display: flex;
   flex-direction: column;
@@ -158,11 +170,6 @@ const FilterControls: FC<FilterControlsProps> = ({
   const filterBarOrientation = useSelector<RootState, FilterBarOrientation>(
     ({ dashboardInfo }) => dashboardInfo.filterBarOrientation,
   );
-
-  const { outlinedFilterId, lastUpdated } = useFilterOutlined();
-
-  const [overflowedIds, setOverflowedIds] = useState<string[]>([]);
-  const popoverRef = useRef<DropdownContainerRef>(null);
 
   const dataMask = useSelector<RootState, DataMaskStateWithId>(
     state => state.dataMask,
@@ -433,26 +440,6 @@ const FilterControls: FC<FilterControlsProps> = ({
     ],
   );
 
-  const overflowedFiltersInScope = useMemo(
-    () => filtersInScope.filter(({ id }) => overflowedIds?.includes(id)),
-    [filtersInScope, overflowedIds],
-  );
-
-  const overflowedCrossFilters = useMemo(
-    () =>
-      selectedCrossFilters.filter(({ emitterId, name }) =>
-        overflowedIds?.includes(`${name}${emitterId}`),
-      ),
-    [overflowedIds, selectedCrossFilters],
-  );
-
-  const activeOverflowedFiltersInScope = useMemo(() => {
-    const activeOverflowedFilters = overflowedFiltersInScope.filter(filter =>
-      isNativeFilterWithDataMask(filter),
-    );
-    return [...activeOverflowedFilters, ...overflowedCrossFilters];
-  }, [overflowedCrossFilters, overflowedFiltersInScope]);
-
   const rendererCrossFilter = useCallback(
     (crossFilter, orientation, last) => (
       <CrossFilter
@@ -482,14 +469,7 @@ const FilterControls: FC<FilterControlsProps> = ({
     const nativeFiltersInScope = filtersInScope.map((filter, index) => ({
       id: filter.id,
       element: (
-        <div
-          className="filter-item-wrapper"
-          css={css`
-            flex-shrink: 0;
-          `}
-        >
-          {renderer(filter, index)}
-        </div>
+        <div className="filter-item-wrapper">{renderer(filter, index)}</div>
       ),
     }));
     const dividerItems = [];
@@ -577,122 +557,25 @@ const FilterControls: FC<FilterControlsProps> = ({
 
   const renderHorizontalContent = useCallback(
     () => (
-      <div
-        css={(theme: SupersetTheme) => css`
-          padding: 0 ${theme.sizeUnit * 4}px;
-          min-width: 0;
-          flex: 1;
-        `}
-      >
-        <DropdownContainer
-          items={items}
-          dropdownTriggerCount={activeOverflowedFiltersInScope.length}
-          // Creare: Design System icon button with a dot instead of the
-          // "More filters" text and count badge
-          renderDropdownTrigger={({ count, open }) => (
-            <MoreFiltersTrigger hasActiveFilters={count > 0 && !open} />
-          )}
-          dropdownTriggerClassName={
-            activeOverflowedFiltersInScope.length > 0
-              ? 'more-filters-trigger more-filters-trigger--active'
-              : 'more-filters-trigger'
-          }
-          dropdownPopoverClassName="more-filters-popover"
-          dropdownTriggerTooltip={
-            activeOverflowedFiltersInScope.length === 0
-              ? t('No applied filters')
-              : t(
-                  'Applied filters: %s',
-                  activeOverflowedFiltersInScope
-                    .map(filter => filter.name)
-                    .join(', '),
-                )
-          }
-          dropdownContent={
-            overflowedFiltersInScope.length ||
-            overflowedCrossFilters.length ||
-            (filtersOutOfScope.length && showCollapsePanel) ||
-            (customizationsOutOfScope.length && showCustomizationCollapsePanel)
-              ? () => (
-                  <>
-                    <FiltersDropdownContent
-                      overflowedCrossFilters={overflowedCrossFilters}
-                      filtersInScope={overflowedFiltersInScope}
-                      filtersOutOfScope={filtersOutOfScope}
-                      renderer={renderer}
-                      rendererCrossFilter={rendererCrossFilter}
-                      showCollapsePanel={showCollapsePanel}
-                      forceRenderOutOfScope={hasRequiredFirst}
-                    />
-                    {showCustomizationCollapsePanel && (
-                      <CustomizationsOutOfScopeCollapsible
-                        customizationsOutOfScope={customizationsOutOfScope}
-                        renderer={customizationRenderer}
-                        forceRender={false}
-                      />
-                    )}
-                  </>
-                )
-              : undefined
-          }
-          forceRender={hasRequiredFirst}
-          ref={popoverRef}
-          onOverflowingStateChange={({ overflowed: nextOverflowedIds }) => {
-            if (
-              nextOverflowedIds.length !== overflowedIds.length ||
-              overflowedIds.reduce(
-                (a, b, i) => a || b !== nextOverflowedIds[i],
-                false,
-              )
-            ) {
-              setOverflowedIds(nextOverflowedIds);
-            }
-          }}
-        />
-      </div>
+      <HorizontalFilters className="filter-bar__filters">
+        {items.map(({ id, element }) => (
+          <Fragment key={id}>{element}</Fragment>
+        ))}
+      </HorizontalFilters>
     ),
-    [
-      items,
-      activeOverflowedFiltersInScope,
-      overflowedFiltersInScope,
-      overflowedCrossFilters,
-      filtersOutOfScope,
-      showCollapsePanel,
-      customizationsOutOfScope,
-      showCustomizationCollapsePanel,
-      customizationRenderer,
-      renderer,
-      rendererCrossFilter,
-      hasRequiredFirst,
-      overflowedIds,
-    ],
+    [items],
   );
 
+  // Creare: no filter overflows in the horizontal bar anymore; out of scope
+  // filters (other tabs) are not shown there
   const overflowedByIndex = useMemo(() => {
     const filtersOutOfScopeIds = new Set(filtersOutOfScope.map(({ id }) => id));
-    const overflowedFiltersInScopeIds = new Set(
-      overflowedFiltersInScope.map(({ id }) => id),
+    return filtersWithValues.map(
+      filter =>
+        filterBarOrientation === FilterBarOrientation.Horizontal &&
+        filtersOutOfScopeIds.has(filter.id),
     );
-
-    return filtersWithValues.map(filter => {
-      // Out-of-scope filters in vertical mode are in a Collapse panel, not overflowed
-      if (filtersOutOfScopeIds.has(filter.id)) {
-        return filterBarOrientation === FilterBarOrientation.Horizontal;
-      }
-      return overflowedFiltersInScopeIds.has(filter.id);
-    });
-  }, [
-    filtersOutOfScope,
-    filtersWithValues,
-    overflowedFiltersInScope,
-    filterBarOrientation,
-  ]);
-
-  useEffect(() => {
-    if (outlinedFilterId && overflowedIds.includes(outlinedFilterId)) {
-      popoverRef?.current?.open();
-    }
-  }, [outlinedFilterId, lastUpdated, popoverRef, overflowedIds]);
+  }, [filtersOutOfScope, filtersWithValues, filterBarOrientation]);
 
   return (
     <>

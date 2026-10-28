@@ -99,7 +99,7 @@ test('horizontal bar shows "Clear all" before "Search", with stable class names'
   ).toBeTruthy();
 });
 
-test('horizontal bar "Close" and "Search" hide the filters', () => {
+test('horizontal bar has no "Close" button and "Search" hides the filters', () => {
   const setCollapsed = jest.fn();
   const props = createProps();
   render(
@@ -114,13 +114,27 @@ test('horizontal bar "Close" and "Search" hide the filters', () => {
     { useRedux: true },
   );
 
-  userEvent.click(screen.getByText('Close'));
-  expect(setCollapsed).toHaveBeenLastCalledWith(true);
-
-  setCollapsed.mockClear();
+  expect(screen.queryByText('Close')).not.toBeInTheDocument();
   userEvent.click(screen.getByText('Search'));
   expect(props.onApply).toHaveBeenCalled();
   expect(setCollapsed).toHaveBeenLastCalledWith(true);
+});
+
+test('horizontal bar "Clear all" is the outlined button', () => {
+  const props = createProps();
+  render(
+    <ActionButtons
+      {...props}
+      dataMaskSelected={{ DefaultsID: { filterState: { value: 'a' } } }}
+      filterBarOrientation={FilterBarOrientation.Horizontal}
+    />,
+    { useRedux: true },
+  );
+  const clearAll = screen.getByText('Clear all').closest('button');
+  expect(clearAll).toHaveClass('ant-btn-variant-outlined');
+  expect(clearAll).toBeEnabled();
+  userEvent.click(clearAll!);
+  expect(props.onClearAll).toHaveBeenCalled();
 });
 
 test('vertical bar has no "Close" button', () => {

@@ -22,6 +22,7 @@ import { getExtensionsRegistry, VizType } from '@superset-ui/core';
 import { render, screen, userEvent } from 'spec/helpers/testing-library';
 import { isEmbedded } from 'src/dashboard/util/isEmbedded';
 import { useUiConfig } from 'src/components/UiConfigContext';
+import { ReportHeaderSlotContext } from 'src/dashboard/components/nativeFilters/FilterBar/ReportHeaderSlot';
 import SliceHeader from '.';
 
 jest.mock('src/dashboard/components/SliceHeaderControls', () => ({
@@ -822,4 +823,56 @@ test('Should NOT show row count warning for table chart with server pagination w
   expect(screen.queryByTestId('warning')).not.toBeInTheDocument();
 
   mockUseUiConfig.mockRestore();
+});
+
+const renderInReport = (sliceIds: number[], editMode = false) => {
+  (useUiConfig as jest.MockedFunction<typeof useUiConfig>).mockReturnValue({
+    hideTitle: false,
+    hideTab: false,
+    hideNav: false,
+    hideChartControls: false,
+    emitDataMasks: false,
+    showRowLimitWarning: false,
+  });
+  const slot = document.createElement('div');
+  document.body.appendChild(slot);
+  const props = createProps({ editMode });
+  render(
+    <ReportHeaderSlotContext.Provider value={{ slot, setSlot: jest.fn() }}>
+      <SliceHeader {...props} />
+    </ReportHeaderSlotContext.Provider>,
+    {
+      useRedux: true,
+      useRouter: true,
+      initialState: { ...initialState, dashboardState: { sliceIds } },
+    },
+  );
+  return slot;
+};
+
+test('in a report the chart has no title and its menu goes to the report header', () => {
+  const slot = renderInReport([MOCKED_CHART_ID]);
+  expect(
+    screen.queryByText('Vaccine Candidates per Phase'),
+  ).not.toBeInTheDocument();
+  expect(slot).toContainElement(screen.getByTestId('SliceHeaderControls'));
+  expect(screen.getByTestId('slice-header')).toBeEmptyDOMElement();
+  slot.remove();
+});
+
+test('with more charts each chart keeps its title and menu', () => {
+  const slot = renderInReport([MOCKED_CHART_ID, 1]);
+  expect(screen.getByText('Vaccine Candidates per Phase')).toBeInTheDocument();
+  expect(slot).toBeEmptyDOMElement();
+  expect(screen.getByTestId('slice-header')).toContainElement(
+    screen.getByTestId('SliceHeaderControls'),
+  );
+  slot.remove();
+});
+
+test('in edit mode the chart of a report keeps its editable title', () => {
+  const slot = renderInReport([MOCKED_CHART_ID], true);
+  expect(screen.getByText('Vaccine Candidates per Phase')).toBeInTheDocument();
+  expect(slot).toBeEmptyDOMElement();
+  slot.remove();
 });

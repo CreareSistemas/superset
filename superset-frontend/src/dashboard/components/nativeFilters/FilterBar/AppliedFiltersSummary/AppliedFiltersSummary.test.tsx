@@ -17,8 +17,8 @@
  * under the License.
  */
 import { NativeFilterType } from '@superset-ui/core';
-import { render, screen } from 'spec/helpers/testing-library';
-import AppliedFiltersSummary from '.';
+import { render, screen, userEvent } from 'spec/helpers/testing-library';
+import AppliedFiltersSummary, { MAX_TAGS_PER_FILTER } from '.';
 
 const nativeFilter = (id: string, name: string, filterType: string) => ({
   id,
@@ -78,11 +78,38 @@ test('shows the number of applied filters, their names and one tag per value', (
   expect(screen.getByRole('status')).toHaveTextContent(
     '2 filters applied, veículos, modelos',
   );
-  expect(screen.getByText('ABC1234')).toHaveAttribute('title', 'Veículos');
+  expect(screen.getByText('ABC1234')).toHaveAttribute(
+    'title',
+    'Veículos: ABC1234',
+  );
   expect(screen.getByText('XYZ9876')).toBeInTheDocument();
   expect(screen.getByText('Modelo A')).toHaveClass(
     'applied-filters-summary__tag--2',
   );
+});
+
+test('with many values, shows the first ones and a "+N" tag with the others', async () => {
+  const values = [...Array(8)].map((_, index) => `user-${index + 1}`);
+  renderSummary({
+    'NATIVE_FILTER-1': {
+      id: 'NATIVE_FILTER-1',
+      filterState: { value: values },
+    },
+  });
+
+  expect(
+    document.querySelectorAll('.applied-filters-summary__tag'),
+  ).toHaveLength(MAX_TAGS_PER_FILTER + 1);
+  expect(screen.getByText('user-3')).toBeInTheDocument();
+  expect(screen.queryByText('user-4')).not.toBeInTheDocument();
+
+  const more = screen.getByTestId('applied-filters-summary-more');
+  expect(more).toHaveTextContent('+5');
+  expect(more).toHaveClass('applied-filters-summary__tag--1');
+
+  userEvent.hover(more);
+  expect(await screen.findByText('user-4')).toBeInTheDocument();
+  expect(screen.getByText('user-8')).toBeInTheDocument();
 });
 
 test('shows the period as readable dates', () => {
@@ -96,5 +123,5 @@ test('shows the period as readable dates', () => {
   expect(screen.getByRole('status')).toHaveTextContent(
     '1 filter applied, período',
   );
-  expect(screen.getByText('2026-10-02 to 2026-10-09')).toBeInTheDocument();
+  expect(screen.getByText('10/02/2026 to 10/09/2026')).toBeInTheDocument();
 });

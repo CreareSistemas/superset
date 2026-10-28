@@ -24,6 +24,7 @@ import { Button, Tooltip } from '@superset-ui/core/components';
 import { RootState } from 'src/dashboard/types';
 import { DASHBOARD_HEADER_ID } from 'src/dashboard/util/constants';
 import { useFilterBarCollapse } from './FilterBarCollapse';
+import { useReportHeaderSlot } from './ReportHeaderSlot';
 
 // Creare: report header as in the platform pages (title on the left, the
 // button that shows/hides the filters on the right). Base look from the theme;
@@ -79,11 +80,59 @@ const HeaderContainer = styled.div`
       border-color: ${theme.colorPrimary};
       background: transparent;
     }
+
+    .report-header__actions {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      gap: ${theme.sizeUnit * 2}px;
+    }
+
+    /* menu (3 dots) of the chart of a report, same frame of the toggle */
+    .report-header__chart-controls {
+      display: flex;
+      align-items: center;
+
+      &:empty {
+        display: none;
+      }
+
+      [aria-label='More Options'] {
+        width: ${theme.sizeUnit * 8}px;
+        min-width: ${theme.sizeUnit * 8}px;
+        height: ${theme.sizeUnit * 8}px;
+        padding: 0;
+        border: 2px solid transparent;
+        border-radius: ${theme.borderRadius}px;
+        background: transparent;
+        color: ${theme.colorPrimary};
+
+        /* thicker dots than in the chart header */
+        .anticon svg path {
+          stroke: currentColor;
+          stroke-width: 40px;
+        }
+      }
+
+      .ant-dropdown-open[aria-label='More Options'] {
+        border-color: color-mix(
+          in srgb,
+          ${theme.colorPrimary} 50%,
+          transparent
+        );
+      }
+
+      && [aria-label='More Options']:hover {
+        border-color: ${theme.colorPrimary};
+        background: transparent;
+      }
+    }
   `}
 `;
 
 const ReportHeader = () => {
   const collapse = useFilterBarCollapse();
+  const setChartControlsSlot = useReportHeaderSlot()?.setSlot;
   const title = useSelector<RootState, string>(
     state =>
       state.dashboardLayout?.present?.[DASHBOARD_HEADER_ID]?.meta?.text ?? '',
@@ -95,22 +144,38 @@ const ReportHeader = () => {
   return (
     <HeaderContainer className="report-header" data-test="report-header">
       <h2 className="report-header__title">{t(title)}</h2>
-      {collapse && (
-        <Tooltip title={toggleLabel}>
-          <Button
-            buttonStyle="link"
-            className="report-header__filter-toggle"
-            aria-label={toggleLabel}
-            aria-expanded={isOpen}
-            data-test="report-header-filter-toggle"
-            onClick={() => collapse.setCollapsed(isOpen)}
-          >
-            <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor">
-              <path d="M10 18V16H14V18H10ZM6 13V11H18V13H6ZM3 8V6H21V8H3Z" />
-            </svg>
-          </Button>
-        </Tooltip>
-      )}
+      <div className="report-header__actions">
+        {/* Creare: the chart of a report renders its menu here (portal),
+            before the toggle */}
+        {setChartControlsSlot && (
+          <div
+            className="report-header__chart-controls"
+            data-test="report-header-chart-controls"
+            ref={setChartControlsSlot}
+          />
+        )}
+        {collapse && (
+          <Tooltip title={toggleLabel}>
+            <Button
+              buttonStyle="link"
+              className="report-header__filter-toggle"
+              aria-label={toggleLabel}
+              aria-expanded={isOpen}
+              data-test="report-header-filter-toggle"
+              onClick={() => collapse.setCollapsed(isOpen)}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width={20}
+                height={20}
+                fill="currentColor"
+              >
+                <path d="M10 18V16H14V18H10ZM6 13V11H18V13H6ZM3 8V6H21V8H3Z" />
+              </svg>
+            </Button>
+          </Tooltip>
+        )}
+      </div>
     </HeaderContainer>
   );
 };

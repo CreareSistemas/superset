@@ -19,6 +19,7 @@
 import { render, screen, userEvent } from 'spec/helpers/testing-library';
 import { FilterBarCollapseContext } from './FilterBarCollapse';
 import ReportHeader from './ReportHeader';
+import { ReportHeaderSlotContext } from './ReportHeaderSlot';
 
 const renderHeader = (collapsed: boolean, setCollapsed = jest.fn()) =>
   render(
@@ -64,4 +65,32 @@ test('the toggle shows the hidden filters', () => {
   expect(toggle).toHaveAttribute('aria-expanded', 'false');
   userEvent.click(toggle);
   expect(setCollapsed).toHaveBeenCalledWith(false);
+});
+
+test('gives the chart of a report a place for its menu, before the toggle', () => {
+  const setSlot = jest.fn();
+  render(
+    <ReportHeaderSlotContext.Provider value={{ slot: null, setSlot }}>
+      <FilterBarCollapseContext.Provider
+        value={{ collapsed: false, setCollapsed: jest.fn() }}
+      >
+        <ReportHeader />
+      </FilterBarCollapseContext.Provider>
+    </ReportHeaderSlotContext.Provider>,
+    { useRedux: true },
+  );
+  const slot = screen.getByTestId('report-header-chart-controls');
+  expect(setSlot).toHaveBeenCalledWith(slot);
+  expect(
+    screen
+      .getByTestId('report-header-filter-toggle')
+      .compareDocumentPosition(slot) & Node.DOCUMENT_POSITION_PRECEDING,
+  ).toBeTruthy();
+});
+
+test('has no place for the chart menu without the slot provider', () => {
+  renderHeader(false);
+  expect(
+    screen.queryByTestId('report-header-chart-controls'),
+  ).not.toBeInTheDocument();
 });

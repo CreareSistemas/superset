@@ -104,6 +104,8 @@ export type FrameComponentProps = {
   onChange: (timeRange: string) => void;
   value: string;
   isOverflowingFilterBar?: boolean;
+  /** Creare: true while only the start of the range is picked */
+  onPendingChange?: (pending: boolean) => void;
 };
 
 export interface DateFilterControlProps {
