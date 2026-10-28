@@ -76,8 +76,8 @@ export interface StickyState {
   realHeight?: number; // actual table viewport height (header + scrollable area)
   bodyHeight?: number; // scrollable area height
   tableHeight?: number; // the full table height
-  theadHeight?: number; // measured header height
-  tfootHeight?: number; // measured footer height
+  theadHeight?: number;
+  tfootHeight?: number;
   columnWidths?: ColumnWidths;
   hasHorizontalScroll?: boolean;
   hasVerticalScroll?: boolean;
@@ -112,10 +112,6 @@ const mergeStyleProp = (
 });
 const fixedTableLayout: CSSProperties = { tableLayout: 'fixed' };
 
-/**
- * Sizes of the scrollable area for the given container, from the measured
- * table (header, footer, full height and column widths).
- */
 function getStickySize({
   maxWidth,
   maxHeight,
@@ -217,10 +213,6 @@ function StickyWrap({
 
   const scrollBarSize = getScrollBarSize();
   const { bodyHeight, columnWidths, hasVerticalScroll } = sticky;
-  // Creare: the column widths do not depend on the height (the sizer always
-  // reserves the vertical scroll bar gutter), so a change of the height alone
-  // (e.g. the chart fitted to the viewport when the filter bar opens/closes)
-  // reuses the measured table instead of rendering a hidden copy of all rows
   const measured =
     !!columnWidths &&
     sticky.tableHeight !== undefined &&
@@ -266,7 +258,6 @@ function StickyWrap({
     });
   }, [maxWidth, maxHeight, setStickyState, scrollBarSize]);
 
-  // Creare: new height only, the table is already measured
   useLayoutEffect(() => {
     if (!heightChangedOnly || !columnWidths) {
       return;
@@ -464,10 +455,7 @@ function useInstance<D extends object>(instance: TableInstance<D>) {
         size,
       });
     },
-    // turning pages would also trigger a resize. Creare: not `getTableSize`,
-    // which changes with the chart size: a new size is already detected by
-    // StickyWrap (width/height), and only a new height must not measure the
-    // whole table again
+    // turning pages would also trigger a resize
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [dispatch, page, rows],
   );

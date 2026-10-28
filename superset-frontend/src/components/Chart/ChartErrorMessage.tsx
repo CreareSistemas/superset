@@ -39,7 +39,6 @@ export const ChartErrorMessage: FC<Props> = ({ chartId, error, ...props }) => {
   // fetches the chart owners and adds them to the extra data of the error message
   const { result: owners } = useChartOwnerNames(chartId);
 
-  // Creare: no embedded, erros de token expirado viram o TokenExpiredAlert
   const isEmbeddedContext = window.parent !== window;
   const isTokenExpiredError =
     error?.message &&

@@ -22,10 +22,6 @@ import { COLUMN_TYPE, ROW_TYPE } from 'src/dashboard/util/componentTypes';
 const isLastChild = (parent: LayoutItem | undefined, childId: string) =>
   !!parent?.children?.length && parent.children.at(-1) === childId;
 
-/**
- * Creare: whether the chart is at the bottom of the dashboard, i.e. in the
- * last row of the grid/tab (and the last chart of its column, if any).
- */
 export default function isChartInLastRow(
   component: LayoutItem,
   parentComponent: LayoutItem,

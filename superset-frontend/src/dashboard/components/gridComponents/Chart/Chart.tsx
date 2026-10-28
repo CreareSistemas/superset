@@ -97,7 +97,6 @@ interface ChartProps {
   isInView?: boolean;
   cacheBusterProp?: string | number;
   chartHolderRef?: RefObject<HTMLDivElement>;
-  /** Creare: apply height changes right away (chart fitted to the viewport) */
   resizeHeightImmediately?: boolean;
 }
 
@@ -347,8 +346,10 @@ const Chart = (props: ChartProps) => {
       const computedHeight = getComputedStyle(
         headerRef.current,
       ).getPropertyValue('height');
-      const headerHeight =
-        parseInt(computedHeight, 10) || DEFAULT_HEADER_HEIGHT;
+      const parsedHeight = parseInt(computedHeight, 10);
+      const headerHeight = Number.isNaN(parsedHeight)
+        ? DEFAULT_HEADER_HEIGHT
+        : parsedHeight;
       return headerHeight + marginBottom;
     }
     return DEFAULT_HEADER_HEIGHT;
@@ -359,9 +360,6 @@ const Chart = (props: ChartProps) => {
         ?.queried_dttm as string | null) ?? null)
     : null;
 
-  // Creare: when fitted to the viewport the height follows the holder on every
-  // frame (filters collapsing, window resize) instead of jumping after the
-  // resize debounce
   const currentHeight = props.resizeHeightImmediately ? props.height : height;
 
   const getChartHeight = useCallback((): number => {

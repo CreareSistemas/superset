@@ -152,7 +152,6 @@ export default styled.div`
       padding: ${theme.paddingXXS}px 0px;
     }
 
-    /* Creare: total of results on the left of the pages, same row */
     .dt-pagination--with-info {
       display: flex;
       align-items: center;

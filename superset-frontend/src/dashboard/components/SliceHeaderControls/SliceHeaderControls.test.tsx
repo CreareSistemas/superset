@@ -180,7 +180,6 @@ test('Should render default props', () => {
   expect(screen.getByText('Force refresh')).toBeInTheDocument();
   expect(screen.getByText('Show chart description')).toBeInTheDocument();
   expect(screen.getByText('Edit chart')).toBeInTheDocument();
-  // downloads are straight in the menu, without the "Download" submenu
   expect(screen.queryByText('Download')).not.toBeInTheDocument();
   expect(screen.getByText('Export to .CSV')).toBeInTheDocument();
   expect(screen.getByText('Export to Excel')).toBeInTheDocument();

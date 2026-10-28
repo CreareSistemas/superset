@@ -24,7 +24,6 @@ import {
   stopSlide,
 } from './headerTransition';
 
-// jsdom has no Web Animations API
 class FakeAnimation extends EventTarget {
   cancel = jest.fn();
 

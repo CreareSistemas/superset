@@ -197,8 +197,6 @@ const ChartHolder = ({
     parentComponent.type,
   ]);
 
-  // Creare: in the embedded dashboard the last row fills the rest of the
-  // viewport, so only the chart (e.g. a table) scrolls, not the page
   const shouldFitToViewport =
     isEmbedded() &&
     !editMode &&

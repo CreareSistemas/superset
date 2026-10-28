@@ -37,6 +37,7 @@ const customIcons = [
   'CheckboxOff',
   'CheckboxOn',
   'CircleSolid',
+  'CreareCalendar',
   'Drag',
   'ErrorSolidSmallRed',
   'Error',

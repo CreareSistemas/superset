@@ -1398,9 +1398,6 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       // Table is decreasing its original size
       nextWidth = width;
     }
-    // Creare: the height is given by the container (it does not depend on the
-    // table scrollbars), so the table uses it exactly to end at the bottom of
-    // the chart without a blank strip
     if (nextWidth !== tableWidth || height !== tableHeight) {
       handleSizeChange({ width: nextWidth, height });
     }
@@ -1488,8 +1485,6 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     serverPaginationData,
   ]);
 
-  // Creare: total of results on the pagination row. When the query reached the
-  // row limit, a tooltip explains that there may be more data
   const resultsCountInfo = useMemo(() => {
     const numberFormat = new Intl.NumberFormat(
       document.documentElement.lang || undefined,

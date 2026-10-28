@@ -27,6 +27,24 @@ test('formats a specific range without hours when both ends are at midnight', ()
   ).toBe('02/10/2026 to 09/10/2026');
 });
 
+test('a range saved by the calendar (end at 23:59:59) shows only the dates', () => {
+  expect(
+    formatTimeRangeForDisplay(
+      '2026-10-19T00:00:00 : 2026-10-26T23:59:59',
+      'pt_BR',
+    ),
+  ).toBe('19/10/2026 to 26/10/2026');
+});
+
+test('shows the hours when the calendar end time is not the end of the day', () => {
+  expect(
+    formatTimeRangeForDisplay(
+      '2026-10-19T00:00:00 : 2026-10-26T18:30:59',
+      'pt_BR',
+    ),
+  ).toBe('19/10/2026 00:00 to 26/10/2026 18:30');
+});
+
 test('shows the hours when one of the ends is not at midnight', () => {
   expect(
     formatTimeRangeForDisplay(

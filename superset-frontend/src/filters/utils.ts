@@ -31,12 +31,6 @@ import {
   ExpressionTypes,
 } from '../explore/components/controls/FilterControl/types';
 
-/**
- * Creare: action placeholder for an empty native filter, e.g. "Select the
- * period" or "Selecione o(s) veículo(s)". A translation for the key
- * "<filter name>_placeholder" (superset-custom) overrides it per filter.
- * Returns `defaultPlaceholder` when the filter name is unknown.
- */
 export const getFilterPlaceholder = (
   filterName?: string,
   defaultPlaceholder?: string,

@@ -422,3 +422,39 @@ test('FilterControls overflowedByIndex updates when filters change scope', () =>
 
   expect(container).toBeInTheDocument();
 });
+
+test('horizontal bar shows every filter in the bar, without a "More filters" popover', () => {
+  const defaultState = getDefaultState(FilterBarOrientation.Horizontal);
+  const state = {
+    ...defaultState,
+    dashboardInfo: {
+      ...defaultState.dashboardInfo,
+      metadata: {
+        native_filter_configuration: Object.values(
+          defaultState.nativeFilters.filters,
+        ).map(filter => ({ ...filter, type: 'NATIVE_FILTER' })),
+      },
+    },
+    dashboardLayout: {
+      present: {
+        ROOT_ID: { type: 'ROOT', id: 'ROOT_ID', children: ['GRID_ID'] },
+        GRID_ID: { type: 'GRID', id: 'GRID_ID', children: ['CHART-1'] },
+        'CHART-1': { type: 'CHART', id: 'CHART-1', meta: { chartId: 1 } },
+      },
+    },
+  };
+  const { useSelector } = jest.requireMock('react-redux');
+  useSelector.mockImplementation((selector: (s: typeof state) => unknown) =>
+    selector(state),
+  );
+
+  const { container } = setupWithFilters(state);
+
+  const filters = container.querySelector('.filter-bar__filters');
+  expect(filters).toBeInTheDocument();
+  expect(filters!.querySelectorAll('.filter-item-wrapper')).toHaveLength(3);
+  expect(
+    screen.queryByTestId('dropdown-container-btn'),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('More filters')).not.toBeInTheDocument();
+});

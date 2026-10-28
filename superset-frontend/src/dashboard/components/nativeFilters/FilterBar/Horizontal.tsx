@@ -59,12 +59,6 @@ const HorizontalBarContent = styled.div`
   `}
 `;
 
-// Creare: open/close animation of the platform filters. The height changes at
-// once (no layout work on every frame) and takes no space at all when hidden.
-// The bar slides like a drawer, clipped by this wrapper, together with the
-// content below (see DashboardBuilder), all with transforms (compositor only).
-// While animating the bar is clipped; once open it may overflow, so the select
-// dropdowns are not cut
 const CollapseWrapper = styled.div`
   height: 0;
   opacity: 0;
@@ -81,8 +75,6 @@ const CollapseWrapper = styled.div`
   }
 `;
 
-// Creare: the gear and the filters, so the dashboard CSS can put the action
-// buttons on their own row
 const HorizontalBarFields = styled.div`
   display: flex;
   flex: 1 1 auto;
@@ -111,14 +103,12 @@ const HorizontalFilterBar: FC<HorizontalBarProps> = ({
   onClearAllComplete,
 }) => {
   const collapsed = !!useFilterBarCollapse()?.collapsed;
-  // open and done animating: the content may overflow (select dropdowns)
   const [settled, setSettled] = useState(!collapsed);
   useEffect(() => {
     if (collapsed) {
       setSettled(false);
       return undefined;
     }
-    // the drawer animation runs on the bar (DashboardBuilder), so wait for it
     const timer = setTimeout(
       () => setSettled(true),
       FILTER_BAR_COLLAPSE_DURATION + 50,
@@ -149,8 +139,6 @@ const HorizontalFilterBar: FC<HorizontalBarProps> = ({
     chartCustomizationValues.length > 0;
 
   return (
-    // Creare: the bar opens/closes with the same animation of the platform
-    // filters; it is hidden, not unmounted, so the filters keep their state
     <CollapseWrapper
       className={cx(
         'filter-bar-collapse',
@@ -159,7 +147,6 @@ const HorizontalFilterBar: FC<HorizontalBarProps> = ({
       )}
       aria-hidden={collapsed}
     >
-      {/* Creare: stable class names so the dashboard CSS can style the bar */}
       <HorizontalBar
         className={
           collapsed

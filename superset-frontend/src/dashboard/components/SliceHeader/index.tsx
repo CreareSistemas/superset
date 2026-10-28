@@ -25,6 +25,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { t } from '@apache-superset/core/translation';
 import { getExtensionsRegistry, QueryData } from '@superset-ui/core';
 import {
@@ -45,6 +46,7 @@ import { RootState } from 'src/dashboard/types';
 import { getSliceHeaderTooltip } from 'src/dashboard/util/getSliceHeaderTooltip';
 import { DashboardPageIdContext } from 'src/dashboard/containers/DashboardPage';
 import RowCountLabel from 'src/components/RowCountLabel';
+import { useReportHeaderChartControlsSlot } from 'src/dashboard/components/nativeFilters/FilterBar/ReportHeaderSlot';
 import { Link } from 'react-router-dom';
 
 const extensionsRegistry = getExtensionsRegistry();
@@ -203,6 +205,8 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
     );
 
     const theme = useTheme();
+    const reportHeaderSlot = useReportHeaderChartControlsSlot();
+    const isInReportHeader = !editMode && !!reportHeaderSlot;
 
     const rowLimit = Number(formData.row_limit ?? 0);
 
@@ -256,6 +260,101 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
       </Link>
     );
 
+    const indicators = (
+      <>
+        {SliceHeaderExtension && (
+          <SliceHeaderExtension
+            sliceId={slice.slice_id}
+            dashboardId={dashboardId}
+          />
+        )}
+        {crossFilterValue && (
+          <Tooltip
+            placement="top"
+            title={t(
+              'This chart applies cross-filters to charts whose datasets contain columns with the same name.',
+            )}
+          >
+            <CrossFilterIcon iconSize="m" />
+          </Tooltip>
+        )}
+        {!uiConfig.hideChartControls && (
+          <CustomizationsBadge chartId={slice.slice_id} />
+        )}
+
+        {!uiConfig.hideChartControls && (
+          <FiltersBadge chartId={slice.slice_id} />
+        )}
+
+        {showRowLimitWarning && (
+          <RowCountLabel
+            rowcount={sqlRowCount}
+            limit={rowLimit}
+            label={
+              <Icons.WarningOutlined
+                iconSize="l"
+                iconColor={theme.colorWarning}
+                css={theme => css`
+                  padding: ${theme.sizeUnit}px;
+                `}
+              />
+            }
+          />
+        )}
+      </>
+    );
+
+    const menu = !uiConfig.hideChartControls && (
+      <SliceHeaderControls
+        slice={slice}
+        isCached={isCached}
+        isExpanded={isExpanded}
+        cachedDttm={cachedDttm}
+        queriedDttm={queriedDttm}
+        updatedDttm={updatedDttm}
+        toggleExpandSlice={toggleExpandSlice}
+        forceRefresh={forceRefresh}
+        logExploreChart={logExploreChart}
+        logEvent={logEvent}
+        exportCSV={exportCSV}
+        exportPivotCSV={exportPivotCSV}
+        exportFullCSV={exportFullCSV}
+        exportXLSX={exportXLSX}
+        exportFullXLSX={exportFullXLSX}
+        supersetCanExplore={supersetCanExplore}
+        supersetCanShare={supersetCanShare}
+        supersetCanCSV={supersetCanCSV}
+        componentId={componentId}
+        dashboardId={dashboardId}
+        addSuccessToast={addSuccessToast}
+        addDangerToast={addDangerToast}
+        handleToggleFullSize={handleToggleFullSize}
+        isFullSize={isFullSize}
+        isDescriptionExpanded={isExpanded}
+        chartStatus={chartStatus}
+        formData={formData}
+        exploreUrl={exploreUrl}
+        crossFiltersEnabled={isCrossFiltersEnabled}
+        exportPivotExcel={exportPivotExcel}
+        chartHolderRef={chartHolderRef}
+      />
+    );
+
+    if (isInReportHeader && reportHeaderSlot) {
+      return (
+        <ChartHeaderStyles
+          data-test="slice-header"
+          ref={ref}
+          className="slice-header--in-report-header"
+          css={css`
+            margin: 0;
+          `}
+        >
+          {menu && createPortal(menu, reportHeaderSlot)}
+        </ChartHeaderStyles>
+      );
+    }
+
     return (
       <ChartHeaderStyles data-test="slice-header" ref={ref}>
         <div className="header-title" ref={headerRef}>
@@ -264,7 +363,6 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
             <div>
               <EditableTitle
                 title={
-                  // Creare: traduz o título fora do modo de edição
                   (sliceName && (editMode ? sliceName : t(sliceName))) ||
                   (editMode
                     ? '---' // this makes an empty title clickable
@@ -307,80 +405,8 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
         <div className="header-controls">
           {!editMode && (
             <>
-              {SliceHeaderExtension && (
-                <SliceHeaderExtension
-                  sliceId={slice.slice_id}
-                  dashboardId={dashboardId}
-                />
-              )}
-              {crossFilterValue && (
-                <Tooltip
-                  placement="top"
-                  title={t(
-                    'This chart applies cross-filters to charts whose datasets contain columns with the same name.',
-                  )}
-                >
-                  <CrossFilterIcon iconSize="m" />
-                </Tooltip>
-              )}
-              {!uiConfig.hideChartControls && (
-                <CustomizationsBadge chartId={slice.slice_id} />
-              )}
-
-              {!uiConfig.hideChartControls && (
-                <FiltersBadge chartId={slice.slice_id} />
-              )}
-
-              {showRowLimitWarning && (
-                <RowCountLabel
-                  rowcount={sqlRowCount}
-                  limit={rowLimit}
-                  label={
-                    <Icons.WarningOutlined
-                      iconSize="l"
-                      iconColor={theme.colorWarning}
-                      css={theme => css`
-                        padding: ${theme.sizeUnit}px;
-                      `}
-                    />
-                  }
-                />
-              )}
-              {!uiConfig.hideChartControls && (
-                <SliceHeaderControls
-                  slice={slice}
-                  isCached={isCached}
-                  isExpanded={isExpanded}
-                  cachedDttm={cachedDttm}
-                  queriedDttm={queriedDttm}
-                  updatedDttm={updatedDttm}
-                  toggleExpandSlice={toggleExpandSlice}
-                  forceRefresh={forceRefresh}
-                  logExploreChart={logExploreChart}
-                  logEvent={logEvent}
-                  exportCSV={exportCSV}
-                  exportPivotCSV={exportPivotCSV}
-                  exportFullCSV={exportFullCSV}
-                  exportXLSX={exportXLSX}
-                  exportFullXLSX={exportFullXLSX}
-                  supersetCanExplore={supersetCanExplore}
-                  supersetCanShare={supersetCanShare}
-                  supersetCanCSV={supersetCanCSV}
-                  componentId={componentId}
-                  dashboardId={dashboardId}
-                  addSuccessToast={addSuccessToast}
-                  addDangerToast={addDangerToast}
-                  handleToggleFullSize={handleToggleFullSize}
-                  isFullSize={isFullSize}
-                  isDescriptionExpanded={isExpanded}
-                  chartStatus={chartStatus}
-                  formData={formData}
-                  exploreUrl={exploreUrl}
-                  crossFiltersEnabled={isCrossFiltersEnabled}
-                  exportPivotExcel={exportPivotExcel}
-                  chartHolderRef={chartHolderRef}
-                />
-              )}
+              {indicators}
+              {menu}
             </>
           )}
         </div>

@@ -104,6 +104,7 @@ export type FrameComponentProps = {
   onChange: (timeRange: string) => void;
   value: string;
   isOverflowingFilterBar?: boolean;
+  onPendingChange?: (pending: boolean) => void;
 };
 
 export interface DateFilterControlProps {
@@ -113,8 +114,6 @@ export interface DateFilterControlProps {
   onOpenPopover?: () => void;
   onClosePopover?: () => void;
   isOverflowingFilterBar?: boolean;
-  // only show a specific start/end date range, hiding the range type select
   specificRangeOnly?: boolean;
-  // label shown (as a placeholder) instead of "No filter" when empty
   placeholder?: string;
 }

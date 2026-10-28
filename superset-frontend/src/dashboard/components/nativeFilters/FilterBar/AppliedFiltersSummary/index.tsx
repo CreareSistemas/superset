@@ -19,13 +19,13 @@
 import { memo } from 'react';
 import { t } from '@apache-superset/core/translation';
 import { css, styled } from '@apache-superset/core/theme';
+import { Tooltip } from '@superset-ui/core/components';
 import { useAppliedFiltersSummary } from './useAppliedFiltersSummary';
 
-// Number of tag colors of the Design System (see the dashboard CSS)
 const TAG_COLORS = 5;
 
-// Creare: Design System "Filtro/Resumo" strip. Base layout and colors come from
-// the theme; the dashboard CSS refines it through the classes below.
+export const MAX_TAGS_PER_FILTER = 3;
+
 const SummaryContainer = styled.div`
   ${({ theme }) => css`
     display: flex;
@@ -64,7 +64,16 @@ const SummaryContainer = styled.div`
       font-weight: ${theme.fontWeightStrong};
       white-space: nowrap;
     }
+
+    .applied-filters-summary__tag--more {
+      cursor: default;
+    }
   `}
+`;
+
+const HiddenValues = styled.div`
+  max-height: 240px;
+  overflow-y: auto;
 `;
 
 const AppliedFiltersSummary = () => {
@@ -94,19 +103,49 @@ const AppliedFiltersSummary = () => {
         , {names}
       </p>
       <div className="applied-filters-summary__tags">
-        {appliedFilters.map((filter, index) =>
-          filter.values.map(value => (
-            <span
-              key={`${filter.id}-${value}`}
-              className={`applied-filters-summary__tag applied-filters-summary__tag--${
-                (index % TAG_COLORS) + 1
-              }`}
-              title={filter.name}
-            >
-              {value}
-            </span>
-          )),
-        )}
+        {appliedFilters.map((filter, index) => {
+          const tagClassName = `applied-filters-summary__tag applied-filters-summary__tag--${
+            (index % TAG_COLORS) + 1
+          }`;
+          const shown = filter.values.slice(0, MAX_TAGS_PER_FILTER);
+          const hidden = filter.values.slice(MAX_TAGS_PER_FILTER);
+          return [
+            ...shown.map(value => (
+              <span
+                key={`${filter.id}-${value}`}
+                className={tagClassName}
+                title={`${filter.name}: ${value}`}
+              >
+                {value}
+              </span>
+            )),
+            hidden.length > 0 && (
+              <Tooltip
+                key={`${filter.id}-more`}
+                placement="bottom"
+                title={
+                  <HiddenValues>
+                    {hidden.map(value => (
+                      <div key={value}>{value}</div>
+                    ))}
+                  </HiddenValues>
+                }
+              >
+                <span
+                  className={`${tagClassName} applied-filters-summary__tag--more`}
+                  data-test="applied-filters-summary-more"
+                  aria-label={t(
+                    '%s more values of %s',
+                    hidden.length,
+                    filter.name,
+                  )}
+                >
+                  +{hidden.length}
+                </span>
+              </Tooltip>
+            ),
+          ];
+        })}
       </div>
     </SummaryContainer>
   );

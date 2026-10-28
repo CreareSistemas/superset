@@ -18,6 +18,7 @@
  */
 import { ReactNode, useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import cx from 'classnames';
 import { t } from '@apache-superset/core/translation';
 import {
   NO_TIME_RANGE,
@@ -105,6 +106,18 @@ const ContentStyleWrapper = styled.div`
     .footer {
       text-align: right;
     }
+
+    .footer--range {
+      display: flex;
+      gap: ${theme.sizeUnit * 2}px;
+      margin-top: ${theme.sizeUnit * 4}px;
+
+      .superset-button {
+        flex: 1 1 0;
+        min-width: 0;
+        margin: 0;
+      }
+    }
   `}
 `;
 
@@ -167,6 +180,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   const [lastFetchedTimeRange, setLastFetchedTimeRange] = useState(value);
   const [timeRangeValue, setTimeRangeValue] = useState(value);
   const [validTimeRange, setValidTimeRange] = useState<boolean>(false);
+  const [rangePending, setRangePending] = useState<boolean>(false);
   const [evalResponse, setEvalResponse] = useState<string>(value);
   const [tooltipTitle, setTooltipTitle] = useState<ReactNode | null>(value);
   const theme = useTheme();
@@ -207,7 +221,6 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
             getTooltipTitle(labelIsTruncated, value, actualRange),
           );
         } else if (specificRangeOnly) {
-          // Creare: readable dates instead of "2026-10-02 ≤ col < 2026-10-09"
           setActualTimeRange(
             formatTimeRangeForDisplay(value, locale) ?? (actualRange || ''),
           );
@@ -263,6 +276,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   }
 
   function onOpen() {
+    setRangePending(false);
     setTimeRangeValue(value);
     setFrame(guessedFrame);
     setShow(true);
@@ -270,6 +284,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   }
 
   function onHide() {
+    setRangePending(false);
     setTimeRangeValue(value);
     setFrame(guessedFrame);
     setShow(false);
@@ -295,6 +310,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
     <SpecificRangeFrame
       value={timeRangeValue}
       onChange={setTimeRangeValue}
+      onPendingChange={setRangePending}
       isOverflowingFilterBar={isOverflowingFilterBar}
     />
   ) : (
@@ -336,9 +352,8 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   const overlayContent = (
     <ContentStyleWrapper>
       {frameContent}
-      <Divider />
+      {!specificRangeOnly && <Divider />}
       {specificRangeOnly ? (
-        // the evaluated range is redundant here: only show validation errors
         !validTimeRange && (
           <>
             <IconWrapper className="warning">
@@ -367,7 +382,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
           <Divider />
         </>
       )}
-      <div className="footer">
+      <div className={cx('footer', { 'footer--range': specificRangeOnly })}>
         <Button
           buttonStyle="secondary"
           cta
@@ -375,17 +390,17 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
           onClick={onHide}
           data-test={DateFilterTestKey.CancelButton}
         >
-          {t('CANCEL')}
+          {specificRangeOnly ? t('Cancel') : t('CANCEL')}
         </Button>
         <Button
           buttonStyle="primary"
           cta
-          disabled={!validTimeRange}
+          disabled={!validTimeRange || rangePending}
           key="apply"
           onClick={onSave}
           data-test={DateFilterTestKey.ApplyButton}
         >
-          {t('APPLY')}
+          {specificRangeOnly ? t('Apply') : t('APPLY')}
         </Button>
       </div>
     </ContentStyleWrapper>
@@ -395,14 +410,8 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
     <ControlPopover
       autoAdjustOverflow={false}
       trigger="click"
-      placement="right"
+      placement={specificRangeOnly ? 'bottomLeft' : 'right'}
       content={overlayContent}
-      title={
-        <IconWrapper>
-          <Icons.EditOutlined />
-          <span className="text">{t('Edit time range')}</span>
-        </IconWrapper>
-      }
       defaultOpen={show}
       open={show}
       onOpenChange={toggleOverlay}
@@ -415,8 +424,6 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
       }
       overlayClassName="time-range-popover"
     >
-      {/* Creare: the dashboard filter (specificRangeOnly) shows no hover
-          tooltip; its technical range text confused report users */}
       <Tooltip placement="top" title={specificRangeOnly ? null : tooltipTitle}>
         <DateLabel
           name={name}

@@ -251,7 +251,6 @@ const processColumns = memoizeOne(function processColumns(
         isPercentMetric && verboseMap?.hasOwnProperty(key.replace('%', ''))
           ? `%${verboseMap[key.replace('%', '')]}`
           : verboseMap?.[key] || key;
-      // Creare: traduz o rótulo da coluna
       const label = t(baseLabel);
       const isTime = dataType === GenericDataType.Temporal;
       const isNumber = dataType === GenericDataType.Numeric;
@@ -491,16 +490,8 @@ const getPageSize = (
 const defaultServerPaginationData = {};
 const defaultColorFormatters = [] as ColorFormatters;
 
-// Creare: last value computed for each chart, with the inputs it came from
 const stableValues = new Map<string, { inputs: unknown[]; value: unknown }>();
 
-/**
- * Creare: returns the value computed before for this chart while its inputs
- * are the same objects. `formData` below is a deep copy made on every call, so
- * the values derived from it were new objects even when only the chart size
- * changed (e.g. fitted to the viewport when the filter bar opens/closes); the
- * table then rebuilt its columns and re-mounted every cell.
- */
 function stableValue<T>(key: string, inputs: unknown[], compute: () => T): T {
   const cached = stableValues.get(key);
   if (
@@ -767,8 +758,6 @@ const transformProps = (
   const passedData = isUsingTimeComparison ? comparisonData || [] : data;
   const passedColumns = isUsingTimeComparison ? comparisonColumns : columns;
 
-  // Creare: the same objects while only the chart size changes (see
-  // stableValue)
   const formattersInputs = [originalFormData, baseQuery?.data, columns, theme];
   const basicColorFormatters =
     comparisonColorEnabled &&
@@ -838,7 +827,6 @@ const transformProps = (
     sortDesc,
     includeSearch,
     rowCount,
-    // Creare: to warn that the total of results may be limited
     rowLimit: Number(formData.row_limit) || 0,
     pageSize: serverPagination
       ? serverPaginationData?.pageSize

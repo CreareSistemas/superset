@@ -17,16 +17,8 @@
  * under the License.
  */
 
-/** Creare: duration of the filter bar open/close animation */
 export const FILTER_BAR_COLLAPSE_DURATION = 350;
 
-/**
- * Creare: the dashboard header (e.g. the filter bar opening/closing) changed
- * its height and the content below is animating for `duration` ms. Charts
- * fitted to the viewport use it to resize once, to the final size, instead
- * of re-measuring on every animation frame. `delta` is how much the header
- * will still grow (0 when the layout is already final).
- */
 export const DASHBOARD_HEADER_TRANSITION_EVENT =
   'creare:dashboard-header-transition';
 
@@ -46,7 +38,6 @@ export function notifyDashboardHeaderTransition(
   );
 }
 
-// slide (Web Animations API) running on each element
 const slides = new WeakMap<HTMLElement, Animation>();
 
 const canAnimate = (element: HTMLElement) =>
@@ -73,11 +64,6 @@ const slide = (
   return animation;
 };
 
-/**
- * Creare: stops the slides running on the elements (e.g. the filter bar is
- * toggled again in the middle of the animation), putting them back in their
- * layout place at once.
- */
 export function stopSlide(elements: HTMLElement[]) {
   elements.forEach(element => {
     slides.get(element)?.cancel();
@@ -85,12 +71,6 @@ export function stopSlide(elements: HTMLElement[]) {
   });
 }
 
-/**
- * Creare: FLIP animation. The elements are already in their final place; they
- * start `offset` px away (where they were) and slide back with a transform.
- * The Web Animations API sets the start position without reading the layout
- * and runs on the compositor (no layout or JS on every frame).
- */
 export function slideFromOffset(
   elements: HTMLElement[],
   offset: number,
@@ -102,11 +82,6 @@ export function slideFromOffset(
     .forEach(element => slide(element, offset, 0, duration));
 }
 
-/**
- * Creare: the opposite move. The element leaves its place sliding `offset` px
- * away with a transform; `onEnd` runs when it is done (to clean up), but not
- * when the slide is stopped.
- */
 export function slideToOffset(
   element: HTMLElement,
   offset: number,

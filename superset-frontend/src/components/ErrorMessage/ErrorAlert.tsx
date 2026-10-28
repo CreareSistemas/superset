@@ -55,7 +55,6 @@ export const ErrorAlert: React.FC<ErrorAlertProps> = ({
 
   const theme = useTheme();
 
-  // Creare: no embedded, erros de token expirado viram o TokenExpiredAlert
   const isEmbeddedContext = window.parent !== window;
   const isTokenExpiredError =
     isEmbeddedContext &&
